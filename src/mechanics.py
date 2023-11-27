@@ -30,6 +30,62 @@ def roll_dice(num_of_dice: int, size_of_dice: int) -> list:
     return (dice_rolls)
 
 
+def roll_ability_check(modifier: int = 5, char_level: int = 10) -> tuple:
+    """
+    Roll for an ability check. Also, saves if a nat 1 or nat 20 was rolled.
+
+    Arguments:
+        modifier (int): rolled ability modifier
+        char_level (int): level of the character
+
+    Returns:
+        tuple: A tuple with base roll[0], total roll[1], nat 1 bool[2], and nat 20 bool[3].
+    """
+    roll = roll_dice(1, 20)[0]  # base dice roll
+    # calculate total roll with modifier & char level
+    total_roll = roll + modifier + char_level
+
+    # print(
+    #     f"rolled: {roll}, nat 1: {nat_one(roll)}, nat 20: {nat_twenty(roll)},\n{roll}+{modifier}+{char_level}={total_roll}")
+    return (roll, total_roll, nat_one(roll), nat_twenty(roll))
+
+
+def roll_ability_save(modifier: int = 14) -> tuple:
+    """
+    Roll for an ability save. Also, saves if a nat 1 or nat 20 was rolled.
+
+    Arguments:
+        ability (str): the ability we are checking.
+
+    Returns:
+        tuple: A tuple with base roll[0], total roll[1], nat 1 bool[2], and nat 20 bool[3].
+    """
+    roll = roll_dice(1, 20)[0]  # base dice roll
+    total_roll = roll + modifier  # calculate total roll with modifier
+
+    print(
+        f"rolled: {roll}, nat 1: {nat_one(roll)}, nat 20: {nat_twenty(roll)},\n{roll}+{modifier}={total_roll}")
+    return (roll, total_roll, nat_one(roll), nat_twenty(roll))
+
+
+def roll_attack_or_spell(modifier: int = 15) -> tuple:
+    """
+    Roll attack or spell roll. Also, saves if a nat 1 or nat 20 was rolled.
+
+    Arguments:
+        modifier (int): character attack roll modifier
+
+    Returns:
+        tuple: A tuple with base roll[0], total roll[1], nat 1 bool[2], and nat 20 bool[3].
+    """
+    roll = roll_dice(1, 20)[0]  # base dice roll
+    total_roll = roll + modifier  # calculate total roll with modifier
+
+    print(
+        f"rolled: {roll}, nat 1: {nat_one(roll)}, nat 20: {nat_twenty(roll)},\n{roll}+{modifier}={total_roll}")
+    return (roll, total_roll, nat_one(roll), nat_twenty(roll))
+
+
 def nat_one(roll: int) -> bool:
     """
     Determine if the dice roll was a natural one aka an automatic critical failure
@@ -56,6 +112,68 @@ def nat_twenty(roll: int) -> bool:
     return roll == 20
 
 
+def calculate_damage_dealt(rolls: list = [1, 2, 3], modifier: int = 0) -> int:
+    """
+    Sum total damage rolled and add any modifiers
+
+    Arguments:
+        rolls (list): the value of the rolled dice.
+        modifier (int): additional base damage added to roll.
+
+    Returns:
+        total (int): the total sum of a given rolls and modifiers.
+    """
+    total = sum(rolls) + modifier
+    # print(f"calculate_damage_dealt... {rolls}+{modifier}={total}")
+    return total
+
+
+def calculate_hazard_damage_dealt(num_of_dice: int = 1, dice_size: int = 4, modifier: int = 0, char_result=1) -> int:
+    """
+    Calculate how much damage a hazard dealt. Rolls the dice, adds the modifier, and calculates dmg based on player's degree of success.
+
+    Arguments:
+        num_of_dice (int): The number of dice rolled
+        size_of_dice (int): The size of the dice rolled
+        modifier (int): additional base damage added to roll.
+        char_result (int): character's degree of success (-1=crit fail, 0= fail, 1=pass, 2=crit pass)
+
+    Returns:
+        total_damage (int): total damage a character will recieve (based on their degree of success)
+    """
+    modifer_based_on_success = {-1: 2, 0: 1, 1: 0, 2: 0}
+
+    rolled_dice = roll_dice(num_of_dice, dice_size)
+    total_damage = calculate_damage_dealt(
+        rolled_dice, modifier) * modifer_based_on_success[char_result]
+
+    # print(
+    #     f"calculate_hazard_damage_dealt... ({rolled_dice}+{modifier})*{modifer_based_on_success[char_result]}={total_damage}")
+    return total_damage
+
+# FIX PLEASE
+
+
+def calculate_enemy_damage_dealt(num_of_dice: int = 1, dice_size: int = 4, dmg_modifier: int = 0, atk_modifier: int = 18, char_ac=28) -> int:
+    modifer_based_on_success = {-1: 0, 0: 0, 1: 1, 2: 2}
+
+    enemy_atk_roll = roll_attack_or_spell(atk_modifier)
+    enemy_result = degree_of_success(
+        char_ac, enemy_atk_roll[1], enemy_atk_roll[2], enemy_atk_roll[3])
+    rolled_dice = roll_dice(num_of_dice, dice_size)
+    total_damage = calculate_damage_dealt(
+        rolled_dice, dmg_modifier) * modifer_based_on_success[enemy_result]
+
+    print(
+        f"calculate_enemy_damage_dealt... ({rolled_dice}+{dmg_modifier})*{modifer_based_on_success[enemy_result]}={total_damage}")
+    return total_damage
+
+
+calculate_enemy_damage_dealt(3, 12, 4)
+# DEGREE OF SUCCESS
+# Did the thing pass the check? Also account for crits
+
+
 def degree_of_success(dc: int, total_roll: int, nat_one: bool = False, nat_twenty: bool = False) -> int:
     """
     Determine the degree of success of a certain roll. Success is determined by a dc or difficulty check.
@@ -68,11 +186,11 @@ def degree_of_success(dc: int, total_roll: int, nat_one: bool = False, nat_twent
     Args:
         dc (int): The difficulty check
         total_roll (int): The total roll of the player, includes the dice roll and any modifiers added.
-        nat_one (bool): Whether the players original roll was a natural one.
-        nat_twenty (bool): Whether the players original roll was a natural twenty.
+        nat_one (bool): Was a nat 1 rolled?
+        nat_twenty (bool): Was a nat 20 rolled?
 
     Returns:
-        int: An integer representing a crit success (2), a success (1), a failure (0), a crit failure (-1).
+        int: integer representing degrees of success (-1=crit fail, 0= fail, 1=pass, 2=crit pass).
     """
     if nat_one:
         print("you rolled a Nat One")
@@ -96,100 +214,20 @@ def degree_of_success(dc: int, total_roll: int, nat_one: bool = False, nat_twent
         return 0
 
 
-def print_pass_fail_or_crit(result):
+def print_degree_of_success_result(result: int) -> str:
     """
     Will print out the degree of success of a roll
+
+    Arguments:
+        result (int): character's degree of success (-1=crit fail, 0= fail, 1=pass, 2=crit pass)
     """
     degree_of_success = {-1: "Critical Failure",
                          0: "Failure", 1: "Success", 2: "Critical Success"}
     return degree_of_success.get(result, "Invalid Result")
 
-
-def ability_check_or_save(ability: str) -> tuple:
-    """
-    Configure the value of a roll for either an ability check or an ability save. Also save the values of a nat one or nat twenty.
-
-    Arguments:
-        ability (str): the ability we are checking.
-
-    Returns:
-        tuple: A tuple containing the final roll, modified roll, nat one check, and nat twenty check.
-    """
-    roll = roll_dice(1, 20)[0]  # base dice roll
-
-    # determine if the roll is for an ability check or save
-    if ability in Test_Chara.ability:
-        modifier = Test_Chara.ability[ability] + Test_Chara.lvl
-    elif ability in Test_Chara.saves:
-        modifier = Test_Chara.saves[ability]
-
-    total_roll = roll + modifier  # calculate total roll with modifier
-
-    # nat one and twenty results
-    nat_twenty_result = nat_twenty(roll)
-    nat_one_result = nat_one(roll)
-    # print(f"rolls: {roll}, nat 1: {nat_one_result}, nat 20: {nat_twenty_result}, ability: {ability}, modifier: {modifier}, total: {total_roll}")
-    return (roll, total_roll, nat_one_result, nat_twenty_result)
-
-
-def attack_or_spell_roll(attack_type: str) -> tuple:
-    """
-    Configure the value of a roll for a physical or spell attack roll. Also save the values of a nat one or nat twenty.
-
-    Arguments:
-        attack_type (str): determine whether we are rolling for a physical or spell attack
-
-    Returns:
-        tuple: A tuple containing the final roll, modified roll, nat one check, and nat twenty check.
-    """
-    roll = roll_dice(1, 20)[0]
-    modifier = Test_Chara.phys_or_spell_atk[attack_type]
-
-    total_roll = roll + modifier
-
-    nat_twenty_result = nat_twenty(roll)
-    nat_one_result = nat_one(roll)
-    print(f"\nrolls: {roll}, nat 1: {nat_one_result}, nat 20: {nat_twenty_result}, type: {attack_type}, modifier: {modifier}, total: {total_roll}")
-    return (roll, total_roll, nat_one_result, nat_twenty_result)
-
-
-def damage_dealt(rolls: list = [0], modifier: int = 0, nat_twenty: bool = False) -> int:
-    """
-    Sums up the total damage rolled from a set of dice along with any additional damage modifiers.
-    This function is used primarily for damage rolls from spells and attacks.
-    If a natural 20 is rolled on the attack dice, then the total damage is doubled.
-
-    Arguments:
-        rolls (list): the value of the rolled dice.
-        modifier (int): additional base damage added to roll.
-        nat_twenty (bool): Used to determine if a critical roll was made.
-
-    Returns:
-        total (int): the total sum of a given roll and modifiers.
-    """
-    total = sum(rolls) + modifier
-    print(f"Rolled dice: {rolls} + {modifier}")
-    if nat_twenty:
-        total *= 2
-        print("Critical Hit! All damage is doubled")
-    print(f"Total Damage: {total}")
-    return total
-
-
-def hazard_damage(num_of_dice, dice_size, modifier, result) -> int:
-    damage_dealt = 0
-    if result == 0:
-        rolled_dice = roll_dice(num_of_dice, dice_size)
-        damage_dealt = sum(rolled_dice) + modifier
-    elif result == -1:
-        rolled_dice = roll_dice(num_of_dice, dice_size)
-        damage_dealt = (sum(rolled_dice) + modifier) * 2
-    else:
-        damage_dealt = 0
-    return damage_dealt
-
-
 ### ACTUAL RESULTS ###
+
+
 def ability_roll_and_text_result(category: str, ability: str, dc: int, crit_success_text="", success_text="", fail_text="", crit_fail_text=""):
     """
     Determines the roll for an ability score, and whether you passed the dc for the following scenario. 
@@ -313,10 +351,10 @@ def player_input_category(word: str) -> str:
                 break
 
     # PRINT TESTS
-    # if action is not None:
-    #     print(f"The input word corresponds to the action: {action}")
-    # else:
-    #     print("No matching action found.")
+    if action is not None:
+        print(f"The input word corresponds to the action: {action}")
+    else:
+        print("No matching action found.")
 
     return action  # Return the matched action or None if there's no match
 
@@ -386,6 +424,6 @@ class Test_Chara:
 
 
 # if __name__ == "__main__":
-#     # inputted = input("Pick your alignment: ")
-#     # player_input_action(inputted)
-#     print("")
+    # inputted = input("Pick your alignment: ")
+    # player_input_category(inputted)
+    # print("")

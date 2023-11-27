@@ -2,141 +2,6 @@ import random
 import mechanics
 
 
-class Animal:
-    # attribute and method of the parent class
-    name = ""
-
-    def eat(self):
-        print("I can eat")
-        print("wow")
-
-
-# inherit from Animal
-class Dog(Animal):
-    # new method in subclass
-    def display(self):
-        # access name attribute of superclass using self
-        print("My name is ", self.name)
-
-
-# create an object of the subclass
-labrador = Dog()
-labrador.name = "Rohu"
-# labrador.eat()
-# labrador.display()
-
-expertise = {
-    "trained": 2,
-    "expert": 4,
-    "master": 6,
-    "legendary": 8,
-    "potency": 2
-}
-
-
-class Old_Character:
-    #     # player specific details
-    #     character_name = ""
-    #     alignment = ""
-    #     level = 1
-
-    #     # initialize saves
-    #     perception = 3
-    #     fortitude = 3
-    #     reflex = 3
-    #     will = 3
-
-    #     def __init__(self, class_name, class_main_ability,
-    #                  class_hitpoints, melee, spellcaster, str, dex, con, intell, wis, cha):
-    #         self.class_name = class_name
-    #         self.class_main_ability = class_main_ability
-    #         self.class_hitpoints = class_hitpoints
-    #         self.melee = melee
-    #         self.spellcaster = spellcaster
-
-    #         # initialize abilities
-    #         self.str = str
-    #         self.dex = dex
-    #         self.con = con
-    #         self.intell = intell
-    #         self.wis = wis
-    #         self.cha = cha
-
-    #         # initialize max and current health
-    #         self.max_health = 0
-    #         self.current_health = 0
-
-    #         # initialize status conditions
-    #         self.blinded = False
-    #         self.dazzled = False
-    #         self.doomed = False
-    #         self.drained = False
-    #         self.fatigued = False
-    #         self.fascinated = False
-    #         self.flat_footed = False
-    #         self.frightened = False
-    #         self.prone = False
-
-    #         # calculations upon initializing
-    #         self.calculate_max_health()
-
-    #     def calculate_max_health(self) -> int:
-    #         """
-    #         Calculate the characters total max health using their class hitpoints,
-    #         their current level, and their number of constitution points.
-    #         Also, sets current hit points to max.
-    #         """
-    #         self.max_health = self.con + self.class_hitpoints * self.level
-    #         self.current_health = self.max_health
-
-    #     def take_damage(self, damage_amount):
-    #         """
-    #         Reduce characters current health by the damage amount inflicted.
-    #         """
-    #         self.current_health -= damage_amount
-    #         if self.current_health <= 0:  # Check if the character is still alive
-    #             self.current_health = 0
-    #             print(f"{self.character_name} has been defeated!")
-
-    #     def heal(self, healing):
-    #         """
-    #         Increases characters current health by the healing amount received.
-    #         """
-    #         self.current_health += healing
-    #         if self.current_health > self.max_health:  # If healing exceeds current max, set to max
-    #             self.current_health = self.max_health
-
-    #     def apply_condition(self, condition):
-    #         """
-    #         Apply status conditions such as frightened, dazzled, etc by setting a bool to True
-
-    #         Arguments:
-    #             condition (str): the name of the status condition
-    #         """
-    #         if hasattr(self, condition):
-    #             setattr(self, condition, True)
-
-    #     def remove_condition(self, condition):
-    #         """
-    #         Remove status conditions such as frightened, dazzled, etc by setting a bool to False
-
-    #         Arguments:
-    #             condition (str): the name of the status condition
-    #         """
-    #         if hasattr(self, condition):
-    #             setattr(self, condition, False)
-
-    #     def is_alive(self) -> bool:
-    #         """
-    #         Check if current character is still alive.
-
-    #         Returns:
-    #             is_alive (bool): whether the characters health exceeds 0
-    #         """
-    #         return self.current_health > 0
-    pass
-
-
 class Character:
     # initialize saves
     perception = 3
@@ -168,6 +33,7 @@ class Character:
         self.fortitude = chosen_class.saves["fortitude"]
         self.reflex = chosen_class.saves["reflex"]
         self.will = chosen_class.saves["will"]
+        self.ac = chosen_class.saves["ac"]
 
         # initialize max and current health
         self.max_health = 0
@@ -196,13 +62,12 @@ class Character:
         self.max_health = (self.con + self.class_hitpoints) * self.level
         self.current_health = self.max_health
 
-    def take_damage(self, damage_amount):
+    def take_damage(self, damage):
         """
         Reduce characters current health by the damage amount inflicted.
         """
-        self.current_health -= damage_amount
-        if self.current_health <= 0:  # Check if the character is still alive
-            self.current_health = 0
+        self.current_health -= damage
+        if self.is_alive():
             print(f"{self.character_name} has been defeated!")
 
     def heal(self, healing):
@@ -242,6 +107,28 @@ class Character:
         """
         return self.current_health > 0
 
+    def current_conditions(self):
+        """
+        List out current conditions.
+        """
+        count = 0
+        conditions = ["blinded", "dazzled", "doomed", "drained",
+                      "fatigued", "fascinated", "flat_footed", "frightened", "prone"]
+        for i in conditions:
+
+            if getattr(self, i):
+                count += 1
+                print(f"{i} is active")
+        if count == 0:
+            print("No conditions are active")
+
+    def punch(self):
+        """
+        Standard attack that every character can use.
+        """
+        # modifier to attack is physical attack
+        # damage is 2d4 + str
+
 
 class Job:
     def __init__(self, name, lvl, abilities, saves, attacks, class_hp, class_main_ability):
@@ -268,10 +155,11 @@ class Fighter(Job):
             "perception": 10 + 2 + 6,
             "fortitude": 10 + 4 + 6,
             "reflex": 10 + 3 + 4,
-            "will": 10 + 2 + 4
+            "will": 10 + 2 + 4,
+            "ac": 10 + 12 + 6 + 1
         }
         attacks = {
-            "physical": 10 + 5 + 6 + 2,
+            "physical": 21,
             "spell": 0
         }
         super().__init__(
@@ -283,17 +171,6 @@ class Fighter(Job):
             class_hp=10,
             class_main_ability="str"
         )
-
-
-chosen_class = Fighter()
-character = Character(chosen_class)
-
-print(character.current_health)
-print(character.max_health)
-print(character.con)
-print(character.class_hitpoints)
-print(character.level)
-print(character.str)
 
 
 class Wizard(Job):
@@ -310,11 +187,12 @@ class Wizard(Job):
             "perception": 10 + 2 + 4,
             "fortitude": 10 + 3 + 4,
             "reflex": 10 + 4 + 4,
-            "will": 10 + 2 + 2
+            "will": 10 + 2 + 2,
+            "ac": 10 + 12 + 4 + 1
         }
         attacks = {
-            "physical": 10 + 3,
-            "spell": 10 + 5 + 4
+            "physical": 15,
+            "spell": 20
         }
         super().__init__(
             name="Wizard",
@@ -322,7 +200,8 @@ class Wizard(Job):
             abilities=abilities,
             saves=saves,
             attacks=attacks,
-            class_hp=7
+            class_hp=7,
+            class_main_ability="intell"
         )
 
 
@@ -340,11 +219,12 @@ class Bard(Job):
             "perception": 10 + 2 + 6,
             "fortitude": 10 + 3 + 6,
             "reflex": 10 + 4 + 4,
-            "will": 10 + 2 + 6
+            "will": 10 + 2 + 6,
+            "ac": 10 + 12 + 4 + 1
         }
         attacks = {
-            "physical": 10 + 3,
-            "spell": 10 + 5 + 4
+            "physical": 15,
+            "spell": 20
         }
         super().__init__(
             name="Bard",
@@ -352,7 +232,8 @@ class Bard(Job):
             abilities=abilities,
             saves=saves,
             attacks=attacks,
-            class_hp=8
+            class_hp=8,
+            class_main_ability="cha"
         )
 
 
@@ -370,10 +251,11 @@ class Rogue(Job):
             "perception": 10 + 2 + 4,
             "fortitude": 10 + 4 + 6,
             "reflex": 10 + 5 + 4,
-            "will": 10 + 1 + 6
+            "will": 10 + 1 + 6,
+            "ac": 10 + 12 + 5 + 1
         }
         attacks = {
-            "physical": 10 + 5 + 6 + 2,
+            "physical": 21,
             "spell": 0
         }
         super().__init__(
@@ -382,8 +264,22 @@ class Rogue(Job):
             abilities=abilities,
             saves=saves,
             attacks=attacks,
-            class_hp=8
+            class_hp=8,
+            class_main_ability="dex"
         )
+
+
+chosen_class = Fighter()
+character = Character(chosen_class)
+
+print(character.current_health)
+print(character.max_health)
+print(character.con)
+print(character.class_hitpoints)
+print(character.level)
+print(character.str)
+print(character.current_conditions())
+print(character.ac)
 
 
 class Weapon:
