@@ -1,5 +1,90 @@
-import random
 import mechanics
+
+
+class Weapon:
+    def __init__(self, name, typing, job, num_of_dice, damage_size, add_dmg, mana_cost=0, heals=False, cooldown_duration=False, cooldown_counter=False):
+        self.name = name
+        self.typing = typing
+        self.job = job
+        self.num_of_dice = num_of_dice
+        self.damage_size = damage_size
+        self.add_dmg = add_dmg
+        self.mana_cost = mana_cost
+        self.heals = heals
+        self.cooldown_duration = cooldown_duration
+        self.cooldown_counter = cooldown_counter
+
+    def attempt(self):
+        return f"You attempt to use {self.name}."
+
+    def you_hit(self):
+        return "You hit."
+
+    def you_missed(self):
+        return "You missed the"
+
+    def attack_roll(self):
+        return mechanics.roll_attack_or_spell()
+
+    def damage_roll(self, degree_of_success=1, enemy="monster") -> int:
+        modifer_based_on_success = {-1: 0, 0: 0, 1: 1, 2: 2}
+        roll = mechanics.roll_dice(self.num_of_dice, self.damage_size)
+        damage = mechanics.calculate_damage_dealt(roll, self.add_dmg)
+
+        if degree_of_success == 2:
+            mechanics.print_text("It's a crit hit! Damage Doubled")
+        damage = damage * modifer_based_on_success[degree_of_success]
+        if self.hit_or_miss(damage):
+            mechanics.print_text(self.you_hit())
+            mechanics.print_text(
+                f"You used \033[1m{self.name}\033[0m and rolled "
+                f"\033[1m{damage}\033[0m total damage.")
+        else:
+            mechanics.print_text(f"{self.you_missed()} {enemy}")
+
+        return damage
+
+    def consume_mana(self, character):
+        if self.mana_cost > 0:
+            if character.mp >= self.mana_cost:
+                character.mp -= self.mana_cost
+                mechanics.print_text(mechanics.style_mana(
+                    self.mana_cost, character.mp))
+            else:
+                mechanics.print_text(mechanics.style_mana(
+                    self.mana_cost, character.mp))
+
+    def apply_healing(self, character):
+        if self.heals:
+            roll = mechanics.roll_dice(self.num_of_dice, self.damage_size)
+            healing = mechanics.calculate_damage_dealt(roll, self.add_dmg)
+            character.heal(healing)
+
+    def start_cooldown(self):
+        # Set the cooldown counter to the maximum duration
+        self.cooldown_counter = self.cooldown_duration
+        print(
+            f"Cooldown Counter has started for {self.name} for {self.cooldown_duration} rounds")
+        # print(f"Confirming counter... {self.cooldown_counter}")
+
+    def reduce_cooldown(self):
+        # Reduce the cooldown counter by 1 (called at the start of each combat round)
+        if self.cooldown_counter > 0:
+            self.cooldown_counter -= 1
+            print(
+                f"{self.name} cooldown reduced by 1... {self.cooldown_counter}")
+
+    def can_use(self, character):
+        # Check if the weapon can be used (cooldown counter is 0)
+        if self.cooldown_duration > 0:
+            return self.cooldown_counter == 0
+        if self.mana_cost > 0:
+            return character.mp > self.mana_cost
+        if self.cooldown_duration == 0:
+            return True
+
+    def hit_or_miss(self, damage=20):
+        return damage != 0
 
 
 class Character:
@@ -10,13 +95,15 @@ class Character:
     will = 3
 
     def __init__(self, chosen_class):
-        self.character_name = ""
+        self.character_name = "player"
         self.alignment = ""
         self.level = chosen_class.lvl
+        self.location = "A0"
 
         self.class_name = chosen_class.name
         self.class_main_ability = chosen_class.class_main_ability
         self.class_hitpoints = chosen_class.class_hp
+        self.mp = chosen_class.class_mp
         self.melee = chosen_class.attacks["physical"]
         self.spellcaster = chosen_class.attacks["spell"]
 
@@ -39,6 +126,9 @@ class Character:
         self.max_health = 0
         self.current_health = 0
 
+        # initialize combat actions
+        self.actions = chosen_class.actions
+
         # initialize status conditions
         self.blinded = False
         self.dazzled = False
@@ -50,8 +140,24 @@ class Character:
         self.frightened = False
         self.prone = False
 
+        # bonuses applied during exploration
+        self.atk_roll_bonus = 0
+
+        # initialize inventory
+        self.inventory = {}
+
         # calculations upon initializing
         self.calculate_max_health()
+
+    def get_ability_mod(self, ability) -> int:
+        abilities = {"str": self.str + 10, "dex": self.dex + 10, "con": self.con + 10,
+                     "intell": self.intell + 10, "int": self.intell + 10, "wis": self.wis + 10, "cha": self.cha + 10,
+                     "perception": self.perception, "fortitude": self.fortitude,
+                     "reflex": self.reflex, "will": self.will}
+        if ability in abilities:
+            return abilities[ability]
+        else:
+            raise ValueError(f"Invalid ability: {ability}")
 
     def calculate_max_health(self) -> int:
         """
@@ -62,13 +168,25 @@ class Character:
         self.max_health = (self.con + self.class_hitpoints) * self.level
         self.current_health = self.max_health
 
+    def get_fighting_actions(self):
+        fighting_actions = []
+        for action_name in self.actions:
+            fighting_actions.append(action_name)
+        return fighting_actions
+
+    def character_death(self):
+        return f"\033[38;5;196m\033[1mEverything goes dark... And you die\033[0m"
+
     def take_damage(self, damage):
         """
         Reduce characters current health by the damage amount inflicted.
         """
         self.current_health -= damage
-        if self.is_alive():
-            print(f"{self.character_name} has been defeated!")
+        if not self.is_alive():
+            mechanics.print_text(self.character_death())
+        else:
+            mechanics.print_text(mechanics.style_damage(
+                self.character_name, damage, self.current_health))
 
     def heal(self, healing):
         """
@@ -77,7 +195,113 @@ class Character:
         self.current_health += healing
         if self.current_health > self.max_health:  # If healing exceeds current max, set to max
             self.current_health = self.max_health
+        mechanics.print_text(mechanics.style_heal(
+            self.character_name, healing))
 
+    def restore_mana(self, healing):
+        """
+        Increases characters current health by the healing amount received.
+        """
+        physical = ["str", "dex"]
+        main_ability = self.class_main_ability
+        if player.class_main_ability in physical:
+            mechanics.print_text(
+                "You can't restore mp since you're not a spellcaster")
+        else:
+            self.mp += healing
+            if self.mp > 50:  # set to max if exceeds
+                self.mp = 50
+            mechanics.print_text(
+                mechanics.style_restore_mana(healing, self.mp))
+
+    # inventory management
+    def add_item_to_inventory(self, item, quantity=1):
+        """
+        Add an item to the character's inventory.
+
+        Args:
+            item (str): The name of the item to add
+            quantity (int): The quantity of the item to add (default is 1)
+        """
+        if item in self.inventory:
+            self.inventory[item] += quantity
+        else:
+            self.inventory[item] = quantity
+        print(f"Added {quantity} {item}(s) to your inventory.")
+
+    def add_loot_to_inventory(self, loot):
+        """
+        Add loot items to the character's inventory.
+
+        Args:
+            loot (dict): contains loot items and their quantities
+        """
+        for item, quantity in loot.items():
+            self.add_item_to_inventory(item, quantity)
+
+    def remove_item_from_inventory(self, item, quantity=1):
+        """
+        Remove an item from the character's inventory.
+
+        Args:
+            item (str): The name of the item to remove.
+            quantity (int): The quantity of the item to remove (default is 1).
+        """
+        if item in self.inventory:
+            if self.inventory[item] >= quantity:
+                self.inventory[item] -= quantity
+                print(f"Removed {quantity} {item}(s) from your inventory.")
+                if self.inventory[item] == 0:
+                    del self.inventory[item]
+            else:
+                print(f"You don't have enough {item}(s) in your inventory.")
+        else:
+            print(f"{item} is not in your inventory.")
+
+    def view_inventory(self):
+        """
+        Display the contents of the character's inventory.
+        """
+        if not self.inventory:
+            mechanics.print_text("Your inventory is empty.")
+        else:
+            print("Inventory:")
+            for item, quantity in self.inventory.items():
+                mechanics.print_text(f"- {item}: {quantity}")
+
+    def use_potion(self, potion_name):
+        healing_type = {
+            "healing potion lesser": [2, 8, 5],
+            "healing potion moderate": [3, 8, 10],
+            "healing potion greater": [6, 8, 20]
+        }
+        mana_type = {
+            "mana potion lesser": [2, 8, 5],
+            "mana potion moderate": [3, 8, 10]
+        }
+        if potion_name in self.inventory and self.inventory[potion_name] > 0:
+            # Is potion in inventory and one is available?
+
+            if potion_name in healing_type:
+                item = healing_type[potion_name]
+                rolls = mechanics.roll_dice(item[0], item[1])
+                potion_healing = mechanics.calculate_damage_dealt(
+                    rolls, item[2])
+                print(item)
+                self.heal(potion_healing)
+            elif potion_name in mana_type:
+                item = mana_type[potion_name]
+                rolls = mechanics.roll_dice(item[0], item[1])
+                potion_healing = mechanics.calculate_damage_dealt(
+                    rolls, item[2])
+                self.restore_mana(potion_healing)
+            self.inventory[potion_name] -= 1
+            mechanics.print_text(
+                f"You used a {potion_name}")
+        else:
+            print(f"You don't have any {potion_name} in your inventory")
+
+    # Condition management
     def apply_condition(self, condition):
         """
         Apply status conditions such as frightened, dazzled, etc by setting a bool to True
@@ -98,6 +322,68 @@ class Character:
         if hasattr(self, condition):
             setattr(self, condition, False)
 
+    def current_conditions(self):
+        """
+        List out current conditions.
+        """
+        count = 0
+        conditions = ["blinded", "dazzled", "doomed", "drained",
+                      "fatigued", "fascinated", "flat_footed", "frightened", "prone"]
+        for i in conditions:
+            if getattr(self, i):
+                count += 1
+                mechanics.print_text(f"{i} is active")
+        if count == 0:
+            mechanics.print_text("No conditions are active")
+
+    def reset_conditions(self):
+        self.blinded = False
+        self.dazzled = False
+        self.doomed = False
+        self.drained = False
+        self.fatigued = False
+        self.fascinated = False
+        self.flat_footed = False
+        self.frightened = False
+        self.prone = False
+
+    def start_round_of_combat(self):
+        # At the beginning of each round of combat, reduce cooldowns for all weapons
+        for action in self.actions.values():
+            # print(
+            # f"Reset cooldown for {action.name} was {action.cooldown_counter}")
+            if action.cooldown_duration > 0:
+                action.reduce_cooldown()
+                # print(
+                # f"Reset cooldown for {action.name} is now {action.cooldown_counter}")
+
+    def apply_cleared_bonus(self, bonus="1 intell"):
+        # bonus format: "1 int"
+        bonus_parts = bonus.split()
+        if len(bonus_parts) == 2:
+            try:
+                bonus_value = int(bonus_parts[0])
+                bonus_attribute = bonus_parts[1]
+                if hasattr(self, bonus_attribute):
+                    # Apply the bonus directly to the specified attribute
+                    setattr(self, bonus_attribute, getattr(
+                        self, bonus_attribute) + bonus_value)
+                    print(f"Applied +{bonus_value} to {bonus_attribute}")
+                else:
+                    print(f"Invalid attribute: {bonus_attribute}")
+            except ValueError:
+                print(f"Invalid bonus value: {bonus_parts[0]}")
+        else:
+            pass
+
+    def apply_bonus(self, bonus):
+        if bonus >= self.atk_roll_bonus:
+            self.atk_roll_bonus = bonus
+        print(f"bonus is {bonus}")
+
+    def reset_attack_bonus(self):
+        self.atk_roll_bonus = 0
+
     def is_alive(self) -> bool:
         """
         Check if current character is still alive.
@@ -107,38 +393,36 @@ class Character:
         """
         return self.current_health > 0
 
-    def current_conditions(self):
-        """
-        List out current conditions.
-        """
-        count = 0
-        conditions = ["blinded", "dazzled", "doomed", "drained",
-                      "fatigued", "fascinated", "flat_footed", "frightened", "prone"]
-        for i in conditions:
+    def attack_roll(self) -> int:
+        # have player make an attack roll... based on their class main ability
+        physical = ["str", "dex"]
+        spell = ["cha", "intell", "wis"]
+        main_ability = self.class_main_ability
+        ability = self.get_ability_mod(self.class_main_ability)
+        if main_ability in physical:
+            modifier = self.melee
+        else:
+            modifier = self.spellcaster
+        roll = mechanics.roll_attack_or_spell(modifier)
+        mechanics.print_text(
+            f"Your \033[1mattack roll\033[0m was \033[1m{roll[1]}\033[0m")
+        return roll
 
-            if getattr(self, i):
-                count += 1
-                print(f"{i} is active")
-        if count == 0:
-            print("No conditions are active")
-
-    def punch(self):
-        """
-        Standard attack that every character can use.
-        """
-        # modifier to attack is physical attack
-        # damage is 2d4 + str
+    def did_it_hit(self, roll, enemy_ac):
+        return mechanics.degree_of_success(enemy_ac, roll[1], roll[2], roll[3])
 
 
 class Job:
-    def __init__(self, name, lvl, abilities, saves, attacks, class_hp, class_main_ability):
+    def __init__(self, name, lvl, abilities, saves, attacks, class_hp, class_mp, class_main_ability, actions):
         self.name = name
         self.lvl = lvl
         self.abilities = abilities
         self.saves = saves
         self.attacks = attacks
         self.class_hp = class_hp
+        self.class_mp = class_mp
         self.class_main_ability = class_main_ability
+        self.actions = actions
 
 
 class Fighter(Job):
@@ -169,7 +453,57 @@ class Fighter(Job):
             saves=saves,
             attacks=attacks,
             class_hp=10,
-            class_main_ability="str"
+            class_mp=0,
+            class_main_ability="str",
+            actions={
+                "punch": Weapon(
+                    name="Punch",
+                    typing="melee",
+                    job="all",
+                    num_of_dice=3,
+                    damage_size=4,
+                    add_dmg=0,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "greatsword": Weapon(
+                    name="Greatsword",
+                    typing="melee",
+                    job="fighter",
+                    num_of_dice=2,
+                    damage_size=12,
+                    add_dmg=7,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "sweeping blade": Weapon(
+                    name="Sweeping Blade",
+                    typing="melee",
+                    job="fighter",
+                    num_of_dice=4,
+                    damage_size=10,
+                    add_dmg=5,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=2,
+                    cooldown_counter=False
+                ),
+                "Dazing Blow": Weapon(
+                    name="Dazing Blow",
+                    typing="melee",
+                    job="fighter",
+                    num_of_dice=5,
+                    damage_size=12,
+                    add_dmg=5,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=3,
+                    cooldown_counter=False
+                )}
         )
 
 
@@ -201,7 +535,71 @@ class Wizard(Job):
             saves=saves,
             attacks=attacks,
             class_hp=7,
-            class_main_ability="intell"
+            class_mp=50,
+            class_main_ability="intell",
+            actions={
+                "punch": Weapon(
+                    name="Punch",
+                    typing="melee",
+                    job="all",
+                    num_of_dice=3,
+                    damage_size=4,
+                    add_dmg=0,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "electric arc": Weapon(
+                    name="Electric Arc",
+                    typing="spell",
+                    job="wizard",
+                    num_of_dice=3,
+                    damage_size=4,
+                    add_dmg=0,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "magic missile": Weapon(
+                    name="Magic Missile",
+                    typing="spell",
+                    job="wizard",
+                    num_of_dice=3,
+                    damage_size=4,
+                    add_dmg=0,
+                    mana_cost=2,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "fireball": Weapon(
+                    name="Fireball",
+                    typing="spell",
+                    job="wizard",
+                    num_of_dice=8,
+                    damage_size=6,
+                    add_dmg=0,
+                    mana_cost=3,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "elemental storm": Weapon(
+                    name="Elemental Storm",
+                    typing="spell",
+                    job="wizard",
+                    num_of_dice=12,
+                    damage_size=6,
+                    add_dmg=0,
+                    mana_cost=5,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                )
+
+            }
         )
 
 
@@ -233,7 +631,71 @@ class Bard(Job):
             saves=saves,
             attacks=attacks,
             class_hp=8,
-            class_main_ability="cha"
+            class_mp=50,
+            class_main_ability="cha",
+            actions={
+                "punch": Weapon(
+                    name="Punch",
+                    typing="melee",
+                    job="all",
+                    num_of_dice=3,
+                    damage_size=4,
+                    add_dmg=0,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "haunting hymm": Weapon(
+                    name="Haunting Hymm",
+                    typing="spell",
+                    job="bard",
+                    num_of_dice=4,
+                    damage_size=6,
+                    add_dmg=5,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "sooth": Weapon(
+                    name="Sooth",
+                    typing="spell",
+                    job="bard",
+                    num_of_dice=2,
+                    damage_size=10,
+                    add_dmg=8,
+                    mana_cost=2,
+                    heals=True,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "sound burst": Weapon(
+                    name="Sound Burst",
+                    typing="spell",
+                    job="bard",
+                    num_of_dice=3,
+                    damage_size=10,
+                    add_dmg=8,
+                    mana_cost=3,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "painful vibrations": Weapon(
+                    name="Painful Vibrations",
+                    typing="spell",
+                    job="bard",
+                    num_of_dice=10,
+                    damage_size=6,
+                    add_dmg=2,
+                    mana_cost=5,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+
+            }
         )
 
 
@@ -265,50 +727,100 @@ class Rogue(Job):
             saves=saves,
             attacks=attacks,
             class_hp=8,
-            class_main_ability="dex"
+            class_mp=0,
+            class_main_ability="dex",
+            actions={
+                "punch": Weapon(
+                    name="Punch",
+                    typing="melee",
+                    job="all",
+                    num_of_dice=3,
+                    damage_size=4,
+                    add_dmg=0,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "dagger": Weapon(
+                    name="Dagger",
+                    typing="melee",
+                    job="rogue",
+                    num_of_dice=5,
+                    damage_size=4,
+                    add_dmg=8,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=False,
+                    cooldown_counter=False
+                ),
+                "sneak attack": Weapon(
+                    name="Sneak Attack",
+                    typing="melee",
+                    job="rogue",
+                    num_of_dice=8,
+                    damage_size=4,
+                    add_dmg=10,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=2,
+                    cooldown_counter=0
+                ),
+                "backstab": Weapon(
+                    name="Backstab",
+                    typing="melee",
+                    job="rogue",
+                    num_of_dice=8,
+                    damage_size=6,
+                    add_dmg=12,
+                    mana_cost=False,
+                    heals=False,
+                    cooldown_duration=3,
+                    cooldown_counter=0
+                ),
+
+            }
         )
 
 
-chosen_class = Fighter()
-character = Character(chosen_class)
+player = Character(Rogue())
 
-print(character.current_health)
-print(character.max_health)
-print(character.con)
-print(character.class_hitpoints)
-print(character.level)
-print(character.str)
-print(character.current_conditions())
-print(character.ac)
+# player.view_inventory()
+# player.add_item_to_inventory("healing potion lesser", quantity=3)
+# player.add_item_to_inventory("mana potion lesser", quantity=3)
+# player.add_item_to_inventory("gold", quantity=50)
 
+# # View the character's inventory
+# player.view_inventory()
 
-class Weapon:
-    def __init__(self, name, num_dice, dice_sides, dmg_modifier, phys_or_spell, strike_name, text_success, text_fail):
-        self.name = name
-        self.num_dice = num_dice
-        self.dice_sides = dice_sides
-        self.dmg_modifier = dmg_modifier
-        self.phys_or_spell = phys_or_spell
-        self.strike_name = strike_name
-        self.text_success = text_success
-        self.text_fail = text_fail
+# # Remove items from the character's inventory
+# player.remove_item_from_inventory("healing potion lesser", quantity=2)
+# player.remove_item_from_inventory("gold", quantity=20)
 
-    def perform_strike(self, is_successful=True):
-        # Perform a strike with the weapon
-        if is_successful:
-            return f"{self.strike_name} with {self.name} - {self.text_success}"
-        else:
-            return f"{self.strike_name} with {self.name} - {self.text_fail}"
+# # View the updated inventory
+# player.view_inventory()
+# player.use_potion("healing potion lesser")
+# player.use_potion("mana potion lesser")
+# player.use_potion("healing potion lesser")
+# player.view_inventory()
 
+# print(player.attack_roll())
 
-# sword that rolls 2d8 for damage
-sword = Weapon(
-    name="Sword",
-    num_dice=2,
-    dice_sides=8,
-    dmg_modifier=2,
-    phys_or_spell="physical",
-    strike_name="Slash",
-    text_success="Hit the target!",
-    text_fail="Missed the target."
-)
+# player.take_damage(42)
+# player.actions["sooth"].consume_mana(player)
+# player.actions["sooth"].apply_healing(player)
+
+# player.attack_roll()
+# player.actions["painful vibrations"].damage_roll()
+# player.actions["painful vibrations"].consume_mana(player)
+# player.take_damage(10)
+# player.attack_roll()
+# player.actions["sound burst"].damage_roll()
+# player.actions["sound burst"].consume_mana(player)
+# player.attack_roll()
+# player.actions["haunting hymm"].damage_roll()
+# player.actions["haunting hymm"].consume_mana(player)
+# player.take_damage(25)
+# CHARACTER.actions["painful vibrations"].consume_mana(CHARACTER)
+
+# print(CHARACTER.actions["painful vibrations"].can_use(CHARACTER))

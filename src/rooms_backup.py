@@ -1,3 +1,4 @@
+
 class Room:
     def __init__(self, name, event, description, room_cleared, room_failed, trigger_hazard,
                  hazard_name, trigger_combat, combat_name, description_cleared,
@@ -21,7 +22,6 @@ class Room:
 
     def is_cleared(self):
         return self.room_cleared
-
 
     def set_cleared(self, value):
         self.room_cleared = value
@@ -123,7 +123,7 @@ s1 = Room(
             "skill_success": "You grab a rock and throw it at the wall. Congrats, you just threw a "
             "rock at a wall."
         },
-        "attacking": {
+        "brute forcing": {
             "DC": 0,
             "skill_success": "You hit the wall, as your weapon phases through it. You try to walk "
             "forward but bounce off the wall. You wonder if there's another angle you can "
@@ -462,7 +462,7 @@ a1 = Room(
 a2 = Room(
     name="Giant Rat Room",
     event="Combat",
-    description="You walk down the tunnel as the darkness grows deeper. The narrow "
+    description=" You walk down the tunnel as the darkness grows deeper. The narrow "
     "passage is damp, and the air feels heavy with moisture. The faint echoes of your "
     "footsteps bounce off the cold, stone walls. As you continue, you hear a "
     "scampering on the floor, followed by sharp screeches. After being through many "
@@ -484,13 +484,13 @@ a2 = Room(
     "west or east.",
     ###
     actions_cleared={
-        "west": ["Continue through the tunnel and move west.", "a1"],
-        "east": ["Continue through the tunnel and move east.", "a3"],
+        "west": ["Continue through the tunnel and move west.", "A1"],
+        "east": ["Continue through the tunnel and move east.", "S1"],
     },
     ###
     actions={
         "perception": {
-            "DC": 26,
+            "DC": 22,
             "success": [
                 "You notice the Giant Rat has a limp on its back left paw, you can "
                 "use this to your advantage in combat.",
@@ -533,7 +533,7 @@ a2 = Room(
             ],
         },
         "animal handling": {
-            "DC": 26,
+            "DC": 22,
             "success": [
                 "With a kind hand and gentle voice, you manage to soothe the rats anxious heart. "
                 "Perhaps its old days of being a smaller rat resurface in its mind. It now acts "
@@ -607,7 +607,7 @@ a2 = Room(
         "attacking": {
             "DC": 0,
             "success": [
-                "Without hesitation, you draw your weapon and prepare to strike.\n"
+                "Without hesitation, you draw your weapon and prepare to strike.\n\n"
                 "Adrenaline courses through your veins as you prepare for the upcoming battle.",
                 "trigger combat"
             ]
@@ -616,7 +616,7 @@ a2 = Room(
             "DC": 0,
             "success": [
                 "You focus your energy, drawing upon your magical powers. With a series of "
-                "gestures the air around you crackles.\nYou prepare to cast a spell for the "
+                "gestures the air around you crackles.\n\nYou prepare to cast a spell for the "
                 "upcoming battle.",
                 "trigger combat"
             ]
@@ -647,8 +647,9 @@ a3 = Room(
     combat_name=None,
     description_cleared="You can see up ahead that there is a corridor that leads either "
     "north or east. \n\nWhich direction would you like to take?",
-    description_failed="The miasma in the room makes you naseous, but at least it's cleared "
-    "up significantly more. You can see a corridor that leads either north or east.",
+    description_failed="The arrows scattered on the floor remind you that you at least "
+    "made it out of the room alive. You can see up ahead that there is a corridor that "
+    "leads either north or east. \n\nWhich direction would you like to take?",
     actions_cleared={
         "north": ["Continue through the tunnel and move north.", "B1"],
         "east": ["Continue through the tunnel and move east.", "A2"],
@@ -753,7 +754,7 @@ b1 = Room(
     actions={
         "recall knowledge": {
             "DC": 20,
-            "success": "Piecing together the clues, you can guess that the creature "
+            "success": "piecing together the clues, you can guess that the creature "
             "stalking you is a Kobold, a cunning and opportunistic creature. The "
             "like to burrow in tunnels and are generally peaceful as long as you "
             "don't trespass in their territory. You know that as long as you can "
@@ -819,23 +820,13 @@ b1 = Room(
                      "trigger combat"]
         },
         "intimidate": {
-            "DC": 27,
+            "DC": 26,
             "success": ["You wait for whatever it is following you through the tunnel. "
                         "You hold onto your weapon with great resolve and puff your "
                         "chest. From the shadows, you see a creature come out of the "
-                        "shadows, a small kobold. You charge towards it with your weapon "
-                        "in hand, letting out a most ferocious roar. The kobolds eyes "
-                        "grow large as its heart leaps out. It falls to the floor and "
-                        "then quickly gets back up to run away. As you partly chase it, "
-                        "it scampers and squeezes into a hidden tunnel in the floor; one "
-                        "that is far too small for you to get into. It likely won’t be "
-                        "coming back out any time soon. You see up ahead a northern tunnel.",
+                        "shadows, a small kobold. You charge towards it with your weapon in hand, letting out a most ferocious roar. The kobolds eyes grow large as its heart leaps out. It falls to the floor and then quickly gets back up to run away. As you partly chase it, it scampered and squeezes into a hidden tunnel in the floor; one that is far too small for you to get into. It likely won’t be coming back out any time soon. You see up ahead a northern tunnel.",
                         "room cleared"],
-            "fail": ["You wait for the creature to come out of the shadows, ready to "
-                     "scare it away with your might. A small kobold appears from the "
-                     "light, carrying a small weapon and some tools. You move towards "
-                     "it and yell at him. Confused, it looks at you with an angry look "
-                     "on its face. It sees your signs of aggression and is ready for combat.",
+            "fail": ["You wait for the creature to come out of the shadows, ready to scare it away with your might. A small kobold appears from the light, carrying a small weapon and some tools. You move towards it and yell at him. Confused, it looks at you with an angry look on its face. It sees your signs of aggression and is ready for combat.",
                      "trigger combat"]
         },
         "diplomacy": {
@@ -859,7 +850,7 @@ b1 = Room(
                      "trigger combat"]
         },
         "perform": {
-            "DC": 22,
+            "DC": 20,
             "success": ["You begin to play a tune, playing a beautiful progression of "
                         "cords. The sound is reminiscent of a warm winter day, filling "
                         "the tunnel with a harmonious tune. From the shadows appears a "
@@ -934,7 +925,7 @@ b2 = Room(
     },
     actions={
         "recall knowledge": {
-            "DC": 27,
+            "DC": 20,
             "success": "You wrack you brain and recall the type of creature this is. "
             "It’s a Shadow, an undead creature made of darkness. They lurk in dark "
             "places and attack those who stray from the light. If you parlay with a "
@@ -948,7 +939,7 @@ b2 = Room(
                         "trigger combat"],
         },
         "cast spell": {
-            "DC": 24,
+            "DC": 20,
             "success": ["You think quickly on your feet. Thinking of the current spells "
                         "in your arsenal, you are reminded of one of the most common "
                         "cantrip spells… ‘Light’. You cast it as radiant light blooms "
@@ -988,7 +979,7 @@ b2 = Room(
                         "trigger combat"],
         },
         "detect magic": {
-            "DC": 25,
+            "DC": 20,
             "success": ["You quickly decipher through your mind, studying the magic in "
                         "the room. You detect some sort of illusion spell throughout "
                         "the small corridor. Without moments hesitation, you counteract "
@@ -1052,7 +1043,7 @@ b2 = Room(
                         "shielding itself from the harmony of your tune.",
                         "attack roll bonus small"],
         },
-        "light": {
+        "throw": {
             "DC": 0,
             "success": ["An idea comes into your head. If this creature is made of "
                         "darkness, then the best way to counteract it is to use light. "
@@ -1063,9 +1054,27 @@ b2 = Room(
                         "as it flails on the floor. As the light grows, the shadow seems "
                         "to dissipate and disappear.", "room cleared"],
         },
-
         "navigate": ["You try to walk ahead with the shadow looming over you. \n\n"
                      "He won't let you escape.",
                      "trigger combat"],
     }
 )
+
+
+
+# Access and use functions of the room
+print(s3.get_description())
+print(s3.actions_cleared["diplomacy"])
+
+
+print(b2.actions["perception"])
+# Check if the room is cleared
+# print(a0.is_cleared())
+
+# # Set the room as cleared
+# a0.set_cleared(True)
+# print(a0.is_cleared())
+
+# # Perform an action and get the result
+# action_result = a0.perform_action("perception")
+# print(action_result["success"][0])

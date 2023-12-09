@@ -1,4 +1,337 @@
+import mechanics
+import random
+# create a base class for the monster
+# class into class for attacks (also include what % of the time a specific move should be used)
+# create defs for: take damage, heal, apply_condition, is alive
+# create defs to determine which atk the monster used -> then deal damage or apply condition
+# special attacks require a DC check, while normal attacks go against player AC
 
+
+class Monster():
+    def __init__(self, name, ac, max_hp, current_hp, level, lore_dc, lore_mod, loot, defeat_text, win_text, attack_list):
+        self.name = name
+        self.ac = ac
+        self.max_hp = max_hp
+        self.level = level
+        self.current_hp = current_hp
+        self.lore_dc = lore_dc
+        self.lore_mod = lore_mod
+        self.loot = loot
+        self.defeat_text = defeat_text
+        self.win_text = win_text
+
+        ### SPECIFIC MONSTER ATTACKS ###
+        self.attack_list = attack_list
+
+    def read_description(self):
+        return ""
+
+    def take_damage(self, damage):
+        self.current_hp -= damage
+        mechanics.print_text(mechanics.style_damage(
+            self.name, damage, self.current_hp))
+        if not self.is_alive():  # DELETE LATER
+            mechanics.print_text(
+                f"\033[1m\033[38;5;241m{self.defeat_text}\n.\n.\033[0m")
+        else:
+            if self.current_hp <= (self.max_hp * .1):
+                mechanics.print_text(f"{self.name} is looking worse for wear. "
+                                     "One strike may be their last.")
+
+    def heal(self, healing):
+        self.current_hp += healing
+        if self.current_hp > self.max_hp:
+            self.current_hp = self.max_hp
+        mechanics.print_text(mechanics.style_heal(self.name, healing))
+
+    def is_alive(self) -> bool:
+        """
+        Check if current enemy is still alive.
+
+        Returns:
+            is_alive (bool): whether the characters health exceeds 0
+        """
+        return self.current_hp > 0
+
+    def event_type(self):
+        return "combat"
+
+    def get_name(self):
+        return self.name
+
+    def select_move(self):
+        move_dict = {}
+        for move_name, attack in self.attack_list.items():
+            move_dict[move_name] = attack
+        if not move_dict:
+            return None
+
+        sorted_moves = sorted(
+            move_dict.items(), key=lambda x: x[1].frequency, reverse=True)
+
+        selected_move = None
+        random_value = random.random()  # use rand to see if move was selected
+
+        for move_name, attack in sorted_moves:
+            if attack.frequency[0] <= random_value <= attack.frequency[1]:
+                selected_move = (move_name, attack)
+                break
+        return selected_move
+
+
+class Attacks(Monster):
+    def __init__(self, name, frequency, atk_roll, dc, dc_type, apply_condition_first, apply_condition_second,
+                 num_of_dice: int, dice_size: int, add_dmg, success_text, fail_text, self_heal_num_dice,
+                 self_heal_dice_size, self_heal_mod) -> None:
+        self.name = name
+        self.frequency = frequency
+        self.atk_roll = atk_roll
+        self.dc = dc
+        self.dc_type = dc_type
+        self.apply_condition_first = apply_condition_first
+        self.apply_condition_second = apply_condition_second
+        self.num_of_dice = num_of_dice
+        self.dice_size = dice_size
+        self.add_dmg = add_dmg
+        self.success_text = success_text
+        self.fail_text = fail_text
+        self.self_heal_num_dice = self_heal_num_dice
+        self.self_heal_dice_size = self_heal_dice_size
+        self.self_heal_mod = self_heal_mod
+
+    def standard_damage_roll(self, monster, char_ac=24):
+        roll = mechanics.calculate_enemy_attack_damage_dealt(
+            self.num_of_dice, self.dice_size, self.add_dmg, self.atk_roll, char_ac)
+        if self.hit_or_miss(roll):
+            mechanics.print_text(self.success_text)
+            mechanics.print_text(
+                f"Using \033[1m{self.name}\033[0m, \033[1m{monster.name}\033[0m dealt "
+                f"\033[1m{roll} damage\033[0m to you")
+        else:
+            mechanics.print_text(self.fail_text)
+        return roll
+
+    def saving_throw_damage_roll(self, monster, char_roll=21, nat_one=False, nat_twenty=False):
+        roll = mechanics.calculate_enemy_saving_throw_damage(
+            self.num_of_dice, self.dice_size, self.add_dmg, self.atk_roll,
+            self.dc, char_roll, nat_one, nat_twenty)
+        if self.hit_or_miss(roll):
+            mechanics.print_text(self.success_text)
+            mechanics.print_text(
+                f"Using \033[1m{self.name}\033[0m, \033[1m{monster.name}\033[0m dealt "
+                f"\033[1m{roll} damage\033[0m to you")
+        else:
+            mechanics.print_text(self.fail_text)
+        return roll
+
+    def can_heal(self):
+        return self.self_heal_dice_size > 0 or self.self_heal_mod > 0
+
+    def apply_healing(self, monster):
+        healing = mechanics.roll_dice(
+            self.self_heal_num_dice, self.self_heal_dice_size)
+        healing = mechanics.calculate_damage_dealt(healing)
+        monster.heal(healing)
+
+    def deal_condition(self):
+        conditions = {"blinded": False, "dazzled": False, "doomed": False, "drained": False,
+                      "fatigued": False, "fascinated": False, "flat_footed": False, "frightened": False, "prone": False}
+        if self.apply_condition_first[0] in conditions:
+            conditions[self.apply_condition_first[0]] = True
+        if self.apply_condition_second[0] in conditions:
+            conditions[self.apply_condition_second[0]] = True
+
+        return conditions
+
+    def hit_or_miss(self, damage=20):
+        return damage != 0
+
+
+test_monster = Monster(
+    name="",
+    ac=0,
+    max_hp=0,
+    current_hp=0,
+    level=0,
+    lore_dc=0,
+    lore_mod="int",
+    loot={},
+    defeat_text="",
+    win_text="",
+    attack_list={
+        "first": Attacks(
+            name="",
+            frequency=1,
+            atk_roll=0,
+            dc=0,
+            dc_type=None,
+            apply_condition_first=None,
+            apply_condition_second=None,
+            num_of_dice=0,
+            dice_size=0,
+            add_dmg=0,
+            success_text="yes",
+            fail_text="no",
+            self_heal_num_dice=0,
+            self_heal_dice_size=0,
+            self_heal_mod=0
+        )
+    }
+)
+
+monster_rat = Monster(
+    name="Giant Rat",
+    ac=16,
+    max_hp=16,
+    current_hp=16,
+    level=1,
+    lore_dc=11,
+    lore_mod="wis",
+    loot={"rope": 1, "gold": 5},
+    defeat_text="The rat slumps over in defeat.",
+    win_text="Completely shocked at it's victory, it simply scuries away in victory.",
+    attack_list={
+        "jaws": Attacks(
+            name="jaws",
+            frequency=1,
+            atk_roll=6,
+            dc=0,
+            dc_type=None,
+            apply_condition_first="",
+            apply_condition_second="",
+            num_of_dice=1,
+            dice_size=6,
+            add_dmg=0,
+            success_text="The Giant Rat lunges out at you with a vicious bite, sinking "
+            "its teeth into you.",
+            fail_text="The Giant Rat lunges out at you, missing. As it ferociously snaps "
+            "at the air.",
+            self_heal_num_dice=0,
+            self_heal_dice_size=0,
+            self_heal_mod=0
+        )
+    }
+)
+monster_kobold = Monster(
+    name="Kobold",
+    ac=18,
+    max_hp=20,
+    current_hp=20,
+    level=1,
+    lore_dc=13,
+    lore_mod="int",
+    loot={"playing cards": 1, "gold": 25, "lockpick": 1, "torch": 1},
+    defeat_text="The Kobold slumps to the floor in defeat",
+    win_text="Completely shocked at it's victory, it simply runs away in confusion.",
+    attack_list={
+        "shortsword": Attacks(
+            name="Shortsword",
+            frequency=1,
+            atk_roll=9,
+            dc=0,
+            dc_type=None,
+            apply_condition_first="",
+            apply_condition_second="",
+            num_of_dice=1,
+            dice_size=8,
+            add_dmg=2,
+            success_text="The Kobold swings its shortsword with precision, "
+            "landing a solid blow.",
+            fail_text="The Kobold's attack misses as it barely grazes your body.",
+            self_heal_num_dice=0,
+            self_heal_dice_size=0,
+            self_heal_mod=0
+        )
+    }
+)
+
+monster_shadow = Monster(
+    name="Shadow",
+    ac=22,
+    max_hp=35,
+    current_hp=35,
+    level=4,
+    lore_dc=17,
+    lore_mod="wis",
+    loot={},
+    defeat_text="The shadow shakes, falling to the floor and leaving behind a black ooze.",
+    win_text="The Shadow shakes with glee as a shrill laughter escapes from it.",
+    attack_list={
+        "shadow claws": Attacks(
+            name="Shadow Claws",
+            frequency=[0, 0.7],
+            atk_roll=15,
+            dc=0,
+            dc_type=None,
+            apply_condition_first="",
+            apply_condition_second="",
+            num_of_dice=2,
+            dice_size=6,
+            add_dmg=4,
+            success_text="The Shadow swipes at you with its Shadow Claws. "
+            "Tendrils phase through your skin as you take damage.",
+            fail_text="You shudder as the Shadow reaches out for you with its Shadow Claws. "
+            "It overestimates and misses.",
+            self_heal_num_dice=0,
+            self_heal_dice_size=0,
+            self_heal_mod=0
+        ),
+        "steal shadow": Attacks(
+            name="Steal Shadow",
+            frequency=[0.71, 1],
+            atk_roll=0,
+            dc=27,
+            dc_type="reflex",
+            apply_condition_first="",
+            apply_condition_second="",
+            num_of_dice=3,
+            dice_size=4,
+            add_dmg=6,
+            success_text="The Shadow grasps a sliver of your shadow and steals it.",
+            fail_text="You shudder as the Shadow reaches out for your shadow as you "
+            "adeptly dodge it.",
+            self_heal_num_dice=0,
+            self_heal_dice_size=0,
+            self_heal_mod=0
+        )
+    }
+)
+
+monster_drake = Monster(
+    name="Frost Drake",
+    ac=25,
+    max_hp=110,
+    current_hp=110,
+    level=7,
+    lore_dc=21,
+    lore_mod="int",
+    loot={"rope": 1, "gold": 5},
+    defeat_text="The rat slumps over in defeat.",
+    win_text="Completely shocked at it's victory, it simply scuries away in victory.",
+    attack_list={
+        "jaws": Attacks(
+            name="jaws",
+            frequency=1,
+            atk_roll=6,
+            dc=0,
+            dc_type=None,
+            apply_condition_first="",
+            apply_condition_second="",
+            num_of_dice=1,
+            dice_size=6,
+            add_dmg=0,
+            success_text="The Giant Rat lunges out at you with a vicious bite, sinking "
+            "its teeth into you.",
+            fail_text="The Giant Rat lunges out at you, missing. As it ferociously snaps "
+            "at the air.",
+            self_heal_num_dice=0,
+            self_heal_dice_size=0,
+            self_heal_mod=0
+        )
+    }
+)
+# monster_rat.attack_list["jaws"].calculate_atk_roll_damage()
+# print(monster_rat.is_alive())
 
 compendium_monster = [
     {
@@ -23,7 +356,7 @@ compendium_monster = [
         "level": 1,
         "lore": [{"lore_dc": 13, "type": "int"}],
         "AC": 18,
-        "HP": 16,
+        "HP": 20,
         "attacks": [
             {
                 "name": "Shortsword",
@@ -45,13 +378,13 @@ compendium_monster = [
         "name": "Shadow",
         "level": 4,
         "lore": [{"lore_dc": 17, "type": "Wisdom"}],
-        "AC": 20,
-        "HP": 30,
+        "AC": 22,
+        "HP": 35,
         "attacks": [
             {
                 "name": "Shadow Hand",
                 "atk_roll": 15,
-                "dmg_roll": [2, 6, 3],
+                "dmg_roll": [2, 6, 4],
                 "atk_success": "The Shadow swipes at you with its shadow hand. Tendrils phase through your skin as you take damage.",
                 "atk_fail": "You shudder as the Shadow reaches out for you with its shadow hand. It overestimates and misses."
             }
@@ -68,7 +401,7 @@ compendium_monster = [
         "attacks": [
             {
                 "name": "Psuedopod",
-                "stk_roll": 13,
+                "atk_roll": 13,
                 "dmg_roll": [2, 8, 5],
                 "atk_success": "The ooze extends its pseudopod and strikes with blinding speed, dealing a devastating blow.",
                 "atk_fail": "You successfully block the ooze's pseudopod."
@@ -244,30 +577,14 @@ compendium_monster = [
 
 ]
 
-
-class Monster:
-    def __init__(self, monster_data):
-        self.id = monster_data["id"]
-        self.name = monster_data["name"]
-        self.level = monster_data["level"]
-        self.lore = monster_data.get("lore", [])
-        self.attacks = monster_data.get("attacks", [])
-        self.loot = monster_data.get("loot", [])
-        self.AC = monster_data.get("AC", None)
-        self.HP = monster_data.get("HP", None)
-        self.special_attacks = monster_data.get("special_attacks", [])
-
-    def __str__(self):
-        return f"Monster ID: {self.id}\nName: {self.name}\nLevel: {self.level}\n"
-
-
-monsters = [Monster(monster_data) for monster_data in compendium_monster]
-
-# Accessing attributes of the first monster
-print("First Monster:")
-print("Name:", monsters[0].name)
-print("Level:", monsters[0].level)
-print("Lore:", monsters[0].lore)
-print("Attacks:", monsters[0].attacks)
-print("Attacks 1:", monsters[0].attacks[0]["name"])
-print("Loot:", monsters[0].loot)
+# monster_shadow.attack_list["shadow claws"].apply_healing(monster_shadow)
+# monster_shadow.take_damage(20)
+# monster_shadow.take_damage(13)
+# monster_shadow.take_damage(10)
+# monster_shadow.attack_list["shadow claws"].standard_damage_roll(monster_shadow)
+# monster_shadow.attack_list["shadow claws"].saving_throw_damage_roll(
+#     monster_shadow)
+# selected_move = monster_shadow.select_move()
+# print(monster_shadow.attack_list[selected_move[0]].name)
+# print(selected_move[1].dc)
+# selected_move[1].standard_damage_roll(monster_shadow)
