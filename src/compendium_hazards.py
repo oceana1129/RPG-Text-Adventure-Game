@@ -32,6 +32,7 @@ class Hazard:
         # See if you pass or fail the hazard's DC
         mechanics.print_text(f"You encounted \033[1m{self.name}\033[0m, you must pass the "
                              f"\033[1mDC check of {self.dc}\033[0m")
+        mechanics.press_enter_to_continue()
         player_results = mechanics.ability_save_and_text_result(
             player_saving_throw_mod, self.dc, self.skill_crit_success, self.skill_success, self.skill_fail, self.skill_crit_fail)
         mechanics.print_text(f"You rolled \033[1m{player_results[1]}\033[0m")

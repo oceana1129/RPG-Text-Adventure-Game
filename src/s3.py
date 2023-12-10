@@ -18,7 +18,7 @@ room = create_room.Room(
     room_secret=False,
     trigger_event=False,
     trigger_name="hazard_instant_death",
-    description_cleared="...",
+    description_cleared="The Fey Queen looks pleased, she'll help you move forward if you'd like.",
     description_failed="You find yourself in a bright void that stretches on endlessly.",
     loot={"healing potion greater": 1, "amulet": 1},
     action_cleared={
@@ -35,7 +35,7 @@ room = create_room.Room(
         "charm": create_room.Action_Cleared(
             used=False,
             bonus="1 str",
-            text="You try to charm her, she is pleased. Oddly, you feel like you've become"
+            text="You give her some compliments and she is pleased. You feel like you've become"
             " a little stronger."
         ),
     },

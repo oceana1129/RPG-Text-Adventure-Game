@@ -299,39 +299,79 @@ monster_shadow = Monster(
 
 monster_drake = Monster(
     name="Frost Drake",
-    ac=25,
-    max_hp=110,
-    current_hp=110,
-    level=7,
+    ac=29,
+    max_hp=145,
+    current_hp=145,
+    level=8,
     lore_dc=21,
     lore_mod="int",
-    loot={"rope": 1, "gold": 5},
-    defeat_text="The rat slumps over in defeat.",
-    win_text="Completely shocked at it's victory, it simply scuries away in victory.",
+    loot={"gold": 150, "glacial amulet": 1,
+          "healing potion greater": 1, "mana potion moderate": 1},
+    defeat_text="The Frost Drake reels backwards on it's hind legs, shocked "
+    "by the pain you've inflected. It flaps its wings in a desperate big to keep "
+    "itself up. And as the light in it's eyes dims, it slams to the floor in defeat.",
+    win_text="The Frost Drake laughs in utter triamph, it walks over to "
+    "it's mound of gold with a smile on it's face.",
     attack_list={
-        "jaws": Attacks(
-            name="jaws",
-            frequency=1,
-            atk_roll=6,
+        "fangs": Attacks(
+            name="Fangs",
+            frequency=[0, 0.35],
+            atk_roll=20,
             dc=0,
             dc_type=None,
             apply_condition_first="",
             apply_condition_second="",
-            num_of_dice=1,
+            num_of_dice=3,
+            dice_size=10,
+            add_dmg=4,
+            success_text="The Frost Drake sinks its fangs into you, dealing a heavy blow.",
+            fail_text="The Frost Drake lunges forward with its fangs, but you manage to evade.",
+            self_heal_num_dice=0,
+            self_heal_dice_size=0,
+            self_heal_mod=0
+        ),
+        "tail whip": Attacks(
+            name="Tail Whip",
+            frequency=[0.36, 0.79],
+            atk_roll=21,
+            dc=0,
+            dc_type=None,
+            apply_condition_first="",
+            apply_condition_second="",
+            num_of_dice=2,
+            dice_size=12,
+            add_dmg=8,
+            success_text="The Frost Drake shifts its weight and lashes out at you with "
+            "its heavy tail, hitting you with great force.",
+            fail_text="The Frost Drake whips its tail through the air. You "
+            "sidestep and avoid the blow.",
+            self_heal_num_dice=0,
+            self_heal_dice_size=0,
+            self_heal_mod=0
+        ),
+        "frost breath": Attacks(
+            name="Frost Breath",
+            frequency=[0.8, 1],
+            atk_roll=0,
+            dc=32,
+            dc_type="fortitude",
+            apply_condition_first="",
+            apply_condition_second="",
+            num_of_dice=7,
             dice_size=6,
             add_dmg=0,
-            success_text="The Giant Rat lunges out at you with a vicious bite, sinking "
-            "its teeth into you.",
-            fail_text="The Giant Rat lunges out at you, missing. As it ferociously snaps "
-            "at the air.",
+            success_text="The Frost Drake breathes in a heavy breath, as swirling "
+            "cold fills its lungs. The Frost Drake breathes out as a chilling "
+            "frost engulfs you, freezing you down to your core as you take damage.",
+            fail_text="The Frost Drake breathes in a heavy breath, as swirling cold "
+            "fills its lungs. You narrowly dodge the Frost Drake's icy frost breath "
+            "by the skin of your teeth.",
             self_heal_num_dice=0,
             self_heal_dice_size=0,
             self_heal_mod=0
         )
     }
 )
-# monster_rat.attack_list["jaws"].calculate_atk_roll_damage()
-# print(monster_rat.is_alive())
 
 compendium_monster = [
     {
@@ -451,7 +491,7 @@ compendium_monster = [
                 "atk_fail": "You swiftly move out of the way of the Skeletal Mage's fiery onslaught, with it only singeing a bit of hair."
             }
         ],
-        "loot": ["20 gold", "Mana Potion Greater", "Healing Potion Minor", "Translation Book", "Letter"]
+        "loot": ["20 gold", "Mana Potion Greater", "Healing Potion Minor", "Book"]
     },
     {
         "id": 6,
@@ -537,7 +577,7 @@ compendium_monster = [
         "attacks": [
             {
                 "name": "Hundred Moth Caress Scythe",
-                "atk_roll": 21,
+                "atk_roll": 23,
                 "dmg_roll": [4, 6, 5],
                 "self_heal": [1, 6, 2],
                 "atk_success": "The necromancer swings her scythe at you. A fluttering gust of hundreds of moths' wingbeats fills the air. You feel your life essence drain as her scythe seeps into your bones.",

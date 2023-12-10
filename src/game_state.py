@@ -43,10 +43,13 @@ EVENTS = {
 
 def reset_game_state():
     global CHARACTER, CURRENT_ROOM, CURRENT_EVENT, DIRECTIONS, ROOMS, EVENTS
+
+    # Reset character, room, and event
     CHARACTER = character_creator.Character(character_creator.Bard())
     CURRENT_ROOM = a0.room
-    CURRENT_EVENT = b2.event
-    DIRECTIONS = ["north", "south", "east", "west"]
+    CURRENT_EVENT = None  # Reset the current event to None
+
+    # Reset room and event dictionaries
     ROOMS = {
         "entrance": a0.room,
         "s1": s1.room,

@@ -21,8 +21,7 @@ room = create_room.Room(
     trigger_name="trigger event",
     description_cleared="The rat scampers around happy to see you again. When you get"
     "close to it, it runs away.\nYou can move either west or east.",
-    description_failed="You've already been through this room.\nYou can move either "
-    "west or east.",
+    description_failed="You can move either east or west.",
     loot={"healing potion lesser": 1, "gold": 50, "rope": 1, "letter": 1},
     action_cleared={
         "animal handling": create_room.Action_Cleared(

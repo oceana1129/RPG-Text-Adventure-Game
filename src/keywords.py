@@ -21,7 +21,8 @@ action_keywords = {
         "check health", "examine status", "inspect character", "view stats",
         "analyze condition", "current status", "current health", "stats",
         "status", "health", "mana", "check mana"],
-    "inventory status": ["check inventory", "inventory", "item", "items", "look at inventory"],
+    "inventory": ["check inventory", "inventory", "item", "items", "look at inventory",
+                  "check items"],
 
     # navigation
     "navigation": ["move", "go", "walk", "travel", "run", "move", "navigate", "traverse", "head"],
@@ -106,6 +107,29 @@ action_keywords = {
     "consume": ["use", "eat", "drink"]
 }
 
+action_inventory = {
+    "healing potion lesser": ["healing potion lesser", "hp lesser"],
+    "healing potion moderate": ["healing potion moderate", "hp moderate"],
+    "healing potion greater": ["healing potion greater", "hp greater"],
+    "mana potion lesser": ["mana potion lesser", "mp lesser"],
+    "mana potion moderate": ["mana potion moderate", "mp moderate"],
+    "amulet": ["amulet", "necklace"],
+    "gold": ["gold", "money", "gp", "gold pieces"],
+    "rope": ["rope"],
+    "playing cards": ["play cards", "playing deck", "playing card"],
+    "letter": ["letter"],
+    "diary": ["diary"],
+    "lockpick": ["lockpick"],
+    "torch": ["torch"],
+    "shovel": ["shovel"],
+    "glacial ring": ["glacial ring"],
+    "hundred moth caress scythe": ["hundred moth caress scythe", "scythe", "moth scythe", "hundred moth"],
+    "necromancer cloak": ["necromancer cloak", "cloak"],
+    "book of shadows": ["book of shadows"],
+    "haunted mirror": ["haunted mirror"],
+    "bone key": ["bone key"]
+}
+
 text_title_screen = """
 ✦ .          ⁺      . ✦ .     ⁺           . ✦
            WELCOME TO THE TEXT RPG GAME
@@ -161,8 +185,7 @@ text_demo_end = "You've made it to the end of the demo!\n"\
     "If you'd like to play the demo again, then please type RESET.\n"\
     "Otherwise, type QUIT to end the game."
 
-text_game_over_death = "Everything goes dark, and you die...\n\n"\
-    "✦ .          ⁺      . ✦ .     ⁺           . ✦\n"\
+text_game_over_death = "✦ .          ⁺      . ✦ .     ⁺           . ✦\n"\
     "                   GAME OVER\n"\
     "✦ .          ⁺      . ✦ .     ⁺           . ✦\n\n"\
     "If you'd like to try again, type RESTART.\n"\
@@ -184,10 +207,10 @@ text_class_error = "Invalid class. Please choose from the available classes."
 
 text_ask_name = "Welcome to the game!\nWhat is your character's name?"
 
-text_select_class = """
-        CURRENT CLASSES:
-        - FIGHTER
-        - WIZARD
-        - ROGUE
-        - BARD
+text_select_class = """What is your character's class?
+    CURRENT CLASSES:
+      - FIGHTER
+      - WIZARD
+      - ROGUE
+      - BARD
 """

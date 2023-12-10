@@ -6,9 +6,6 @@ Loading Screen
 import mechanics
 import character_creator
 import keywords
-import game_state
-import compendium_hazards
-import compendium_monster
 import sys
 import os
 import a0
@@ -20,10 +17,13 @@ import a2
 import a3
 import b1
 import b2
+import c2
 
-CHARACTER = character_creator.Character(character_creator.Rogue())
+screen_width = 150
+
+CHARACTER = character_creator.Character(character_creator.Bard())
 CURRENT_ROOM = a0.room
-CURRENT_EVENT = b2.event
+CURRENT_EVENT = a1.event
 
 DIRECTIONS = ["north", "south", "east", "west"]
 ROOMS = {"entrance": a0.room,
@@ -35,6 +35,7 @@ ROOMS = {"entrance": a0.room,
          "a3": a3.room,
          "b1": b1.room,
          "b2": b2.room,
+         "c2": c2.room,
          }
 EVENTS = {"entrance": None,
           "s1": None,
@@ -45,6 +46,7 @@ EVENTS = {"entrance": None,
           "a3": a3.event,
           "b1": b1.event,
           "b2": b2.event,
+          "c2": c2.event,
           }
 
 #### OPTIONS ####
@@ -62,21 +64,19 @@ def press_enter_to_continue():
     input("\033[38;5;241mPress Enter to continue...\033[0m")
 
 
+def end_demo():
+    mechanics.print_text("You've reached the end of the demo!\n"
+                         "I really hope you've enjoyed the game so far! \n"
+                         "Please check out my GitHub for more future updates\n"
+                         "https://github.com/oceana1129")
+    quit_game()
+
+
 def game_over_screen():
     mechanics.print_text(keywords.text_game_over_death)
 
-    while True:
-        choice = input("Do you want to play again? (yes/no): ")
-
-        if choice == "yes":
-            mechanics.print_text("Restarting the game...", "slow")
-            break
-        elif choice == "no":
-            mechanics.print_text("Thanks for playing!")
-            exit()  # Quit the game
-        else:
-            mechanics.style_error(
-                "Please enter 'yes' or 'no'.")
+    mechanics.print_text("Thanks for playing!")
+    exit()  # Quit the game
 
 #### MOVING AROUND ####
 
@@ -86,7 +86,8 @@ def transition_room(current_room: str, next_room: str, navigation_text: str):
     # Go from current_room to next_room if next_room is a room that
     # you can transition to from current_room
     global CURRENT_ROOM, CURRENT_EVENT, CHARACTER, ROOMS
-
+    if next_room == "end":
+        end_demo()
     if next_room in ROOMS:
         print(f"{navigation_text}... into room {next_room}!\n")
         CURRENT_ROOM = ROOMS[next_room]
@@ -112,9 +113,10 @@ def hazard_activated():
     CHARACTER.take_damage(damage)
 
     if damage == 0:
-        return CURRENT_ROOM.player_clear_room()
+        CURRENT_ROOM.player_clear_room()
     else:
-        return CURRENT_ROOM.player_fail_room()
+        CURRENT_ROOM.player_fail_room()
+    mechanics.print_text(CURRENT_ROOM.get_description())
 
 
 def monster_attack():
@@ -201,7 +203,7 @@ def start_combat():
     global CHARACTER, CURRENT_EVENT
     mechanics.print_text(
         f"The {CURRENT_EVENT.name} is prepared to fight.")
-    while CHARACTER.is_alive() and CURRENT_EVENT.current_hp > 0:
+    while CHARACTER.current_health > 0 and CURRENT_EVENT.current_hp > 0:
         CHARACTER.start_round_of_combat()
         # PLAYER'S TURN
         mechanics.print_text(".\n.\n.", "slow")
@@ -228,12 +230,10 @@ def start_combat():
             mechanics.print_text(f"You earned loot from this encounter...")
             CHARACTER.view_inventory()
         CURRENT_ROOM.room_failed = True
+        mechanics.print_text(CURRENT_ROOM.get_description())
     else:
         mechanics.print_text(CURRENT_EVENT.win_text)
         game_over_screen()
-
-
-# start_combat()
 
 
 def run_trigger_event():
@@ -265,6 +265,7 @@ def room_is_cleared(command):
             # Read description + apply bonus (if applicable) + mark as used
             mechanics.print_text(selected_action.text)
             CHARACTER.apply_cleared_bonus(selected_action.bonus)
+
             selected_action.use_action()
         # ACTION ALREADY USED
         else:
@@ -309,15 +310,17 @@ def room_not_cleared(command):
                 mechanics.print_text(
                     f"You rolled a {result[1]}\n{result[2]}")
                 selected_action.use_action()
+                CHARACTER.apply_bonus(selected_action.bonus)
+                # print(CHARACTER.atk_roll_bonus)
                 CURRENT_ROOM.apply_room_state(
                     selected_action.success_effect, selected_action.fail_effect, result[0])
-                CURRENT_ROOM.get_room_state()
 
             # after rolling for action, if trigger then run room event
             if CURRENT_ROOM.trigger_event:
                 press_enter_to_continue()
-                print("trigger 2")
                 run_trigger_event()
+                if CHARACTER.current_health < 0:
+                    game_over_screen()
 
         # ACTION ALREADY USED
         else:
@@ -330,7 +333,6 @@ def room_not_cleared(command):
             selected_action = CURRENT_ROOM.actions_not_cleared_navigation[command]
             # some navigation leads to event triggers
             if selected_action.trigger_event == "trigger event":
-                print("trigger 3")
                 run_trigger_event()
             # does not trigger event, move as normal
             else:
@@ -355,9 +357,9 @@ def run_secret_event():
         CHARACTER.add_loot_to_inventory(CURRENT_ROOM.loot)
     if CURRENT_ROOM.name == "s3":
         mechanics.print_text("As you put on the amulet granted by the Fey Queen, "
-                             "You feel an odd and warming sensation overcome you. Every part "
-                             "of your body feels a surge of invigoration. Every part of you, "
-                             "shockingly, feels greatly improved.")
+                             "You feel an odd and warming sensation overcome you. You "
+                             "feel a surge of invigoration. As every part of you "
+                             "feels greatly improved.")
         CHARACTER.ac += 1
         CHARACTER.str += 1
         CHARACTER.dex += 1
@@ -371,6 +373,7 @@ def run_secret_event():
         CHARACTER.will += 1
     CURRENT_ROOM.room_cleared = True
     press_enter_to_continue()
+    mechanics.print_text(CURRENT_ROOM.get_description())
 
 
 def room_is_failed(command):
@@ -401,11 +404,9 @@ def navigate_room():
     # ASK PLAYER FOR COMMAND
     while True:
         command = mechanics.player_input(
-            option("...\nWhat would you like to do?"))
+            option("...\nWhat would you like to do?"), CHARACTER)
         if command == "quit":
             quit_game()
-        elif command == "restart":
-            restart_game()
         elif command == "help":
             help()
         # ROOM CLEARED # ROOM CLEARED # ROOM CLEARED # ROOM CLEARED
@@ -424,12 +425,8 @@ def navigate_room():
         # ROOM UNCLEARED # ROOM UNCLEARED # ROOM UNCLEARED # ROOM UNCLEARED
         else:
             room_not_cleared(command)
-            if CURRENT_ROOM.trigger_event:
-                # if CURRENT_ROOM.event == "combat":
-                print("trigger 4")
-                run_trigger_event()
 
-            elif CURRENT_ROOM.room_secret:
+            if CURRENT_ROOM.room_secret:
                 run_secret_event()
 
 
@@ -439,11 +436,6 @@ def start_game():
     mechanics.print_text("Remember to explore and have fun!")
     press_enter_to_continue()
     navigate_room()
-
-
-def restart_game():
-    game_state.reset_game_state()
-    title_screen()
 
 
 def help_menu():
@@ -470,7 +462,8 @@ def title_screen():
 def title_screen_options():
     while True:
         try:
-            command = mechanics.player_input_category(option_title_screen())
+            command = mechanics.player_input_category(
+                option_title_screen(), CHARACTER)
             if command == "play":
                 mechanics.print_text("Starting the game...", "normal")
                 setup_game()
@@ -531,3 +524,9 @@ def setup_game():
 
 if __name__ == "__main__":
     title_screen()
+    # CHARACTER.add_item_to_inventory("healing potion lesser", quantity=3)
+    # CHARACTER.add_item_to_inventory("mana potion lesser", quantity=3)
+    # CHARACTER.add_item_to_inventory("gold", quantity=50)
+
+    # navigate_room()
+    # mechanics.player_input("move", CHARACTER)

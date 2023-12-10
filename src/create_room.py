@@ -36,9 +36,6 @@ class Room:
         self.trigger_event = True
 
     def apply_room_state(self, success_effect, fail_effect, result):
-        # print(f"result was {result}")
-        # print(f"success effect... {success_effect}")
-        # print(f"fail effect... {fail_effect}")
         if result >= 1:
             if success_effect == "room cleared":
                 self.player_clear_room()

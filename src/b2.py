@@ -36,7 +36,7 @@ room = create_room.Room(
     actions_cleared_navigation={
         "north": create_room.Action_Cleared_Navigation(
             navigation_text="Continue through the tunnel and move north.",
-            next_room="c3"
+            next_room="c2"
         ),
         "south": create_room.Action_Cleared_Navigation(
             navigation_text="Continue through the tunnel and move south.",
@@ -257,9 +257,9 @@ room = create_room.Room(
 event = compendium_monster.Monster(
     name="Shadow",
     ac=25,
-    max_hp=90,
-    current_hp=90,
-    level=4,
+    max_hp=75,
+    current_hp=75,
+    level=6,
     lore_dc=17,
     lore_mod="wis",
     loot={},
@@ -269,7 +269,7 @@ event = compendium_monster.Monster(
         "shadow claws": compendium_monster.Attacks(
             name="Shadow Claws",
             frequency=[0, 0.2],
-            atk_roll=14,
+            atk_roll=16,
             dc=0,
             dc_type=None,
             apply_condition_first="",
@@ -289,7 +289,7 @@ event = compendium_monster.Monster(
             name="Steal Shadow",
             frequency=[0.21, 1],
             atk_roll=0,
-            dc=21,
+            dc=24,
             dc_type="reflex",
             apply_condition_first="",
             apply_condition_second="",
@@ -305,5 +305,3 @@ event = compendium_monster.Monster(
         )
     }
 )
-
-# event.select_move()

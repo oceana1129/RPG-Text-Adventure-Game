@@ -287,7 +287,6 @@ class Character:
                 rolls = mechanics.roll_dice(item[0], item[1])
                 potion_healing = mechanics.calculate_damage_dealt(
                     rolls, item[2])
-                print(item)
                 self.heal(potion_healing)
             elif potion_name in mana_type:
                 item = mana_type[potion_name]
@@ -377,9 +376,9 @@ class Character:
             pass
 
     def apply_bonus(self, bonus):
-        if bonus >= self.atk_roll_bonus:
+        if bonus > self.atk_roll_bonus:
             self.atk_roll_bonus = bonus
-        print(f"bonus is {bonus}")
+            print(f"Add +{bonus} to your attack rolls")
 
     def reset_attack_bonus(self):
         self.atk_roll_bonus = 0
@@ -400,9 +399,9 @@ class Character:
         main_ability = self.class_main_ability
         ability = self.get_ability_mod(self.class_main_ability)
         if main_ability in physical:
-            modifier = self.melee
+            modifier = self.melee + self.atk_roll_bonus
         else:
-            modifier = self.spellcaster
+            modifier = self.spellcaster + self.atk_roll_bonus
         roll = mechanics.roll_attack_or_spell(modifier)
         mechanics.print_text(
             f"Your \033[1mattack roll\033[0m was \033[1m{roll[1]}\033[0m")
@@ -556,7 +555,7 @@ class Wizard(Job):
                     job="wizard",
                     num_of_dice=3,
                     damage_size=4,
-                    add_dmg=0,
+                    add_dmg=4,
                     mana_cost=False,
                     heals=False,
                     cooldown_duration=False,
@@ -566,9 +565,9 @@ class Wizard(Job):
                     name="Magic Missile",
                     typing="spell",
                     job="wizard",
-                    num_of_dice=3,
+                    num_of_dice=5,
                     damage_size=4,
-                    add_dmg=0,
+                    add_dmg=5,
                     mana_cost=2,
                     heals=False,
                     cooldown_duration=False,
@@ -783,12 +782,11 @@ class Rogue(Job):
         )
 
 
-player = Character(Rogue())
-
+player = Character(Bard())
+# print(player.inventory)
+# print(player.spellcaster)
+# print(player.class_name)
 # player.view_inventory()
-# player.add_item_to_inventory("healing potion lesser", quantity=3)
-# player.add_item_to_inventory("mana potion lesser", quantity=3)
-# player.add_item_to_inventory("gold", quantity=50)
 
 # # View the character's inventory
 # player.view_inventory()

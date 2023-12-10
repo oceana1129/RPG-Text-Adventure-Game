@@ -80,9 +80,10 @@ def test_attack_or_spell_roll() -> int:
 
 def test_damage_dealt() -> int:
     failure_count = 0
-    failure_count += check_exact(mechanics.damage_dealt([3, 2, 5], 2), 12)
     failure_count += check_exact(
-        mechanics.damage_dealt([3, 2, 5], 2, True), 24)
+        mechanics.calculate_damage_dealt([3, 2, 5], 2), 12)
+    failure_count += check_exact(
+        mechanics.calculate_damage_dealt([3, 1, 5], 2), 11)
     return failure_count
 
 
@@ -94,7 +95,7 @@ def test_calculate_attack_and_dmg() -> int:
 def test_player_input_category() -> int:
     failure_count = 0
     failure_count += check_exact(
-        mechanics.player_input_category("move north"), "navigation")
+        mechanics.player_input_category("move"), "navigation")
     failure_count += check_exact(
         mechanics.player_input_category("start"), "play")
     failure_count += check_exact(
@@ -108,13 +109,6 @@ def test_player_input_category() -> int:
     return failure_count
 
 
-def test_get_player_input() -> int:
-    failure_count = 0
-    failure_count += check_exact(
-        mechanics.get_player_input("move north"), "north")
-    return failure_count
-
-
 def main() -> None:
     failure_count = 0
     failure_count += test_roll_dice()
@@ -122,7 +116,6 @@ def main() -> None:
     failure_count += test_nat_twenty()
     failure_count += test_damage_dealt()
     failure_count += test_player_input_category()
-    failure_count += test_get_player_input()
     failure_count += test_degree_of_success()
 
     print(f"Failed {failure_count} tests")

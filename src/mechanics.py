@@ -1,10 +1,11 @@
 import random
 import sys
 import time
-import os
 import keywords
+import items_compendium
 
 actions = keywords.action_keywords
+inventory_list = keywords.action_inventory
 
 
 ### ROLLING DICE ###
@@ -336,6 +337,7 @@ def ability_roll_and_text_result(category: str, ability: str, dc: int, crit_succ
 # def current_room_data(current_room, action):
 #     pass
 
+
 def enter_a_command() -> str:
     """
     Command to simply get the user input.
@@ -344,7 +346,11 @@ def enter_a_command() -> str:
     return command
 
 
-def player_input_category(word: str) -> str:
+def press_enter_to_continue():
+    input("\033[38;5;241mPress Enter to continue...\033[0m")
+
+
+def player_input_category(word: str, player) -> str:
     """
     Determine player input and if it is correlated with a specific category or keyword available.
 
@@ -355,6 +361,13 @@ def player_input_category(word: str) -> str:
         str: keyword category determined by user input, otherwise None is provided.
     """
     action = None
+
+    is_bard = False
+    is_spellcaster = False
+    if player.class_name.lower() == "bard":
+        is_bard = True
+    if player.spellcaster > 0:
+        is_spellcaster = True
 
     # Iterate through each action category and its associated keywords
     for category, keywords in actions.items():
@@ -376,15 +389,108 @@ def player_input_category(word: str) -> str:
                 break
 
     # PRINT TESTS
-    if action is not None:
-        print(f"Corresponding Input: {action}\n")
+    if action == "perform" and not is_bard:
+        action = None
+        print(f"{action} is not available to your class")
+    elif action == "detect magic" or action == "cast spell" and not is_spellcaster:
+        action = None
+        print(f"{action} is not available to your class")
+    elif action is not None:
+        print(f"Corresponding Input: {action}")
     else:
-        print("No matching action found.\n")
+        print("No matching action found.")
+
+    # if player is not a bard then they can't use perform
+    # if player spellcasting ==0 then they cant use cast spell or detect magic
 
     return action  # Return the matched action or None if there's no match
 
 
-def player_input(command: str) -> str:
+def player_input_inventory(word: str, player) -> str:
+    """
+    Determine player input and if it is correlated with a specific category or keyword available.
+
+    Arguments:
+        word (str): users inputted words
+
+    Returns:
+        str: keyword category determined by user input, otherwise None is provided.
+    """
+    action = None
+
+    # Iterate through each action category and its associated keywords
+    for category, keywords in inventory_list.items():
+        for keyword in keywords:
+            if word == keyword:  # Check for exact match
+                action = category
+                break  # Match is found break the loop
+        if action:
+            break  # Action is found break the loop
+
+    # If no exact match is found, check for partial matches
+    if not action:
+        for category, keywords in inventory_list.items():
+            for keyword in keywords:
+                if keyword in word:
+                    action = category
+                    break  # keyword is found break the loop
+            if action:
+                break
+
+    # PRINT TESTS
+    elif action is not None:
+        print(f"Corresponding Item: {action}")
+    else:
+        print("No matching item found.")
+
+    return action  # Return the matched action or None if there's no match
+
+
+def inventory_menu(player):
+
+    while True:
+        print("\nInventory Menu:")
+        print("1. View Inventory")
+        print("2. Use Item")
+        print("3. Exit Inventory")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            player.view_inventory()
+        elif choice == "2":
+            if not player.inventory or not any(item for item in player.inventory.values() if item > 0):
+                print("You have no items to use, exiting menu")
+                break
+            command = input("Select an item> ")
+            item_name = player_input_inventory(command, player)
+            if item_name:
+                item = items_compendium.inventory_list.get(item_name)
+                if item:
+                    if item.consumeable:
+                        player.use_potion(item.name)
+                    else:
+                        print_text(item.get_description())
+                else:
+                    print("Item not found in inventory.")
+            else:
+                print("Item not recognized.")
+        elif choice == "3" or "choice" == "exit":
+            break
+        else:
+            print("Invalid choice. Please select a valid option.")
+
+
+def use_item(item_name, player):
+    while True:
+        item = items_compendium.inventory_list[item_name]
+        if item.consumeable:
+            player.use_potion(item.name)
+        else:
+            item.get_description()
+
+
+def player_input(command: str, player) -> str:
     """
      Will make sure that player has inputted a proper command. This includes navigational commands.
 
@@ -396,18 +502,22 @@ def player_input(command: str) -> str:
     """
     while True:
         try:
-            player_inputed = player_input_category(command)
+            player_inputed = player_input_category(command, player)
 
             # Checking for navigation specifically first
             if player_inputed == "navigation":
                 command = input("Enter a direction: ").lower()
                 if command in ["north", "up", "forward", "ahead", "south", "down", "back", "backward", "behind", "east", "right", "west", "left"]:
-                    player_inputed = player_input_category(command)
+                    player_inputed = player_input_category(command, player)
                     return player_inputed
                 else:
                     print(
                         "Invalid direction. Please enter 'north', 'south', 'east', or 'west'.")
-            elif player_inputed is None:
+            elif player_inputed == "inventory":
+                print("INVENTORY")
+                inventory_menu(player=player)
+                player_inputed = None
+            if player_inputed is None:
                 print("Invalid command, please try again\n")
                 command = input("Enter a valid command: ")
             else:
@@ -494,17 +604,3 @@ def style_error(message):
 
     error_message = f"{RED}ERROR: {message}{RESET}"
     return (error_message)
-
-
-# print("""
-# Red (Default): \033[91mError: Something went wrong\033[0m
-# Bright Red: \033[91;1mError: Something went wrong\033[0m
-# Light Red: \033[31mError: Something went wrong\033[0m
-# Dark Red: \033[38;5;88mError: Something went wrong\033[0m
-# Maroon: \033[38;5;52mError: Something went wrong\033[0m
-# Crimson: \033[38;5;160mError: Something went wrong\033[0m
-# FireBrick: \033[38;5;196mError: Something went wrong\033[0m
-# IndianRed: \033[38;5;131mError: Something went wrong\033[0m
-# Salmon: \033[38;5;208mError: Something went wrong\033[0m
-# LightCoral: \033[38;5;203mError: Something went wrong\033[0m
-# """)
