@@ -157,7 +157,10 @@ def player_attack():
             mechanics.print_text(f"- \033[1m{action}\033[0m")
         print("")
         attack_selected = input("Which action will you take? ")
-
+        if attack_selected == "quit":
+            quit_game()
+        elif attack_selected == "help":
+            help_menu(asked_from_where="room")
         # Check if the attack_selected is a valid action
         if attack_selected in fighting_actions:
             attack = CHARACTER.actions[attack_selected]
@@ -408,7 +411,7 @@ def navigate_room():
         if command == "quit":
             quit_game()
         elif command == "help":
-            help()
+            help_menu(asked_from_where="room")
         # ROOM CLEARED # ROOM CLEARED # ROOM CLEARED # ROOM CLEARED
         # ROOM CLEARED # ROOM CLEARED # ROOM CLEARED # ROOM CLEARED
         # ROOM IS CLEARED --player can pick from cleared actions or navigation
@@ -438,13 +441,65 @@ def start_game():
     navigate_room()
 
 
-def help_menu():
-    mechanics.print_text(keywords.text_help_base)
-    title_screen_options()
+def help_menu(asked_from_where):
+    mechanics.print_text("✦ .          ⁺      . ✦ .     ⁺           . ✦\n"
+                         "                   HELP MENU\n"
+                         "✦ .          ⁺      . ✦ .     ⁺           . ✦\n")
+    mechanics.print_text("\033[38;5;241mNote: You may access this menu at any "
+                         "time for help\033[0m")
+    while True:
+        mechanics.print_text("Read more about:\n"
+                             "1. Navigation\n"
+                             "2. Exploration\n"
+                             "3. Inventory\n"
+                             "4. Combat\n"
+                             "5. Exit\n")
+        user_input = option("Select one of the following options: ")
+        if user_input == "1" or user_input == "navigation":
+            mechanics.print_text("To navigate use the following commands:\n"
+                                 "- north, east, west, south\n"
+                                 "- up, down, left, right\n"
+                                 "- (front/forward or back/backward)\n")
+            press_enter_to_continue()
+        elif user_input == "2" or user_input == "exploration":
+            mechanics.print_text("To explore, you may use the following commands (and many more):\n"
+                                 "- recall knowledge, perception\n"
+                                 "- interaction, manipulate\n"
+                                 "- animal handling\n"
+                                 "- attacking, brute forcing, punch\n"
+                                 "- cast spell, detect magic\n"
+                                 "- throw, jump\n"
+                                 "- disable, stealth\n"
+                                 "- diplomacy, intimidate, charm\n"
+                                 "- deception, play dead\n"
+                                 "- perform\n")
+            press_enter_to_continue()
+        elif user_input == "3" or user_input == "inventory":
+            mechanics.print_text("During exploration, type 'inventory' to access your items.\n"
+                                 "If an item is consumable, you will drink it to restore MP/HP.\n"
+                                 "Otherwise, it will read the item description.")
+            press_enter_to_continue()
+        elif user_input == "4" or user_input == "combat":
+            mechanics.print_text("If you are a melee class, your strongest actions have cooldowns.\n"
+                                 "Cooldowns start when you use that action and go down by 1 each round of combat.\n"
+                                 "All cooldowns reset upon entering combat.\n\n"
+                                 "If you are a spellcaster class, your strongest actions cost mana.\n"
+                                 "Be careful not to expend all of your mana, otherwise, you may only be able to use your basic actions.")
+        elif user_input == "5" or user_input == "exit":
+            if asked_from_where == "title":
+                mechanics.print_text(keywords.text_title_screen)
+                title_screen_options()
+            if asked_from_where == "room":
+                break
+        else:
+            mechanics.print_text(
+                "Invalid choice. Please select a valid option.")
 
 
 def about_game():
     mechanics.print_text(keywords.text_about)
+    press_enter_to_continue()
+    mechanics.print_text(keywords.text_title_screen)
     title_screen_options()
 
 
@@ -469,8 +524,9 @@ def title_screen_options():
                 setup_game()
             elif command == "about":
                 about_game()
+                mechanics.print_text(keywords.text_title_screen)
             elif command == "help":
-                help_menu()
+                help_menu("title")
             elif command == "quit":
                 quit_game()
             else:
@@ -530,3 +586,4 @@ if __name__ == "__main__":
 
     # navigate_room()
     # mechanics.player_input("move", CHARACTER)
+    # start_combat()

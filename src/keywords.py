@@ -161,6 +161,8 @@ To explore you may use the following commands (and many more):
 - diplomacy, intimidate, charm
 - depeption, play dead
 - perform
+
+
 """
 
 text_about = "Hello, and welcome to the Text RPG game!\n"\
