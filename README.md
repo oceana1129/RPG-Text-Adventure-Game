@@ -13,18 +13,18 @@ Hello, and welcome to the Text Adventure RPG! This is a role-playing game, based
 ### Key Features
 
 Here are some of the features of the game:
-Character Class Selection (unique mechanics and actions for each class)
-Dynamic Degrees of Success (critical fail, fail, success, critical success)
-Character Rolls (ability rolls, saving throws, and attack rolls)
-Dice Rolling (natural 1s and natural 20s)
-Input Based Exploration
-Various Room States
-Input Based Navigation
-Hazards, Puzzles, and Secrets
-Unique Enemies and Varied Attacks
-Combat (healing, dealing damage, taking damage)
-Health, Mana, and Cooldowns
-Inventory System (read item descriptions and consume potions)
+ - Character Class Selection (unique mechanics and actions for each class)
+ - Dynamic Degrees of Success (critical fail, fail, success, critical success)
+ - Character Rolls (ability rolls, saving throws, and attack rolls)
+ - Dice Rolling (natural 1s and natural 20s)
+ - Input Based Exploration
+ - Various Room States
+ - Input Based Navigation
+ - Hazards, Puzzles, and Secrets
+ - Unique Enemies and Varied Attacks
+ - Combat (healing, dealing damage, taking damage)
+ - Health, Mana, and Cooldowns
+ - Inventory System (read item descriptions and consume potions)
 
 ### How Does The Pathfinder 2e System Work?
 
