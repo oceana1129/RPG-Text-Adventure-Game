@@ -1,3 +1,7 @@
+"""
+Core mechanics that are used throughout the game
+"""
+
 import random
 import sys
 import time
@@ -25,9 +29,6 @@ def roll_dice(num_of_dice: int, size_of_dice: int) -> list:
     dice_rolls = []
     for i in range(num_of_dice):
         dice_rolls.append(random.randint(1, size_of_dice))
-
-    # PRINT TESTS
-    # print("roll_dice", dice_rolls)
     return (dice_rolls)
 
 
@@ -43,11 +44,7 @@ def roll_ability_check(modifier: int = 5, char_level: int = 10) -> tuple:
         tuple: A tuple with base roll[0], total roll[1], nat 1 bool[2], and nat 20 bool[3].
     """
     roll = roll_dice(1, 20)[0]  # base dice roll
-    # calculate total roll with modifier & char level
     total_roll = roll + modifier + char_level
-
-    # print(
-    #     f"rolled: {roll}, nat 1: {nat_one(roll)}, nat 20: {nat_twenty(roll)},\n{roll}+{modifier}+{char_level}={total_roll}")
     return (roll, total_roll, nat_one(roll), nat_twenty(roll))
 
 
@@ -63,9 +60,6 @@ def roll_ability_save(modifier: int = 14) -> tuple:
     """
     roll = roll_dice(1, 20)[0]  # base dice roll
     total_roll = roll + modifier  # calculate total roll with modifier
-
-    # print(
-    #     f"rolled: {roll}, nat 1: {nat_one(roll)}, nat 20: {nat_twenty(roll)},\n{roll}+{modifier}={total_roll}")
     return (roll, total_roll, nat_one(roll), nat_twenty(roll))
 
 
@@ -81,9 +75,6 @@ def roll_attack_or_spell(modifier: int = 15) -> tuple:
     """
     roll = roll_dice(1, 20)[0]  # base dice roll
     total_roll = roll + modifier  # calculate total roll with modifier
-
-    # print(
-    #     f"ROLL_ATTACK_OR_SPELL:\nrolled: {roll}, nat 1: {nat_one(roll)}, nat 20: {nat_twenty(roll)},\n{roll}+{modifier}={total_roll}")
     return (roll, total_roll, nat_one(roll), nat_twenty(roll))
 
 
@@ -135,8 +126,6 @@ def degree_of_success(dc: int, total_roll: int, nat_one: bool = False, nat_twent
     Returns:
         int: integer representing degrees of success (-1=crit fail, 0= fail, 1=pass, 2=crit pass).
     """
-    # print(f"total roll...{total_roll}")
-    # print(f"dc... {dc}")
     if nat_one:
         return -1
 
@@ -144,16 +133,12 @@ def degree_of_success(dc: int, total_roll: int, nat_one: bool = False, nat_twent
         dc -= 10  # Decrease DC by 10 for a nat twenty
 
     if total_roll >= dc + 10:
-        # print("you rolled a crit success... 2")
         return 2
     elif total_roll >= dc:
-        # print("you rolled a success... 1")
         return 1
     elif total_roll < dc - 10:
-        # print("you rolled a crit fail... -1")
         return -1
     else:
-        # print("you rolled a fail... 0")
         return 0
 
 
@@ -169,7 +154,6 @@ def calculate_damage_dealt(rolls: list = [1, 2, 3], modifier: int = 0) -> int:
         total (int): the total sum of a given rolls and modifiers.
     """
     total = sum(rolls) + modifier
-    # print(f"calculate_damage_dealt... {rolls}+{modifier}={total}")
     return total
 
 ### ENEMY RESULTS ###
@@ -193,14 +177,27 @@ def calculate_hazard_damage_dealt(num_of_dice: int = 1, dice_size: int = 4, modi
     rolled_dice = roll_dice(num_of_dice, dice_size)
     total_damage = calculate_damage_dealt(
         rolled_dice, modifier) * modifer_based_on_success[char_result]
-
-    # print(
-    #     f"calculate_hazard_damage_dealt... ({rolled_dice}+{modifier})*{modifer_based_on_success[char_result]}={total_damage}")
     return total_damage
 
 
 def calculate_enemy_attack_damage_dealt(num_of_dice: int = 1, dice_size: int = 4, dmg_modifier: int = 5,
                                         atk_modifier: int = 18, char_ac=28) -> int:
+    """
+    Calculate the amount of damage an enemy inflicted onto the character
+    for a standard attack. Will determine if they hit by the player's ac.
+    It will calculate the amount of damage they inflicted on the player based
+    on the degree of success of their roll
+
+    Args:
+        num_of_dice (int): number of dice rolled
+        dice_size (int): size of the dice rolled
+        dmg_modifier (int): additional damage modifier to roll
+        atk_modifier (int): attack modifier to hit the player character
+        char_ac (int): player character ac (armor class)
+
+    Returns:
+        total_damage (int): the total amount of calculated damage they inflicted.
+    """
     modifer_based_on_success = {-1: 0, 0: 0, 1: 1, 2: 2}
 
     enemy_atk_roll = roll_attack_or_spell(atk_modifier)
@@ -210,15 +207,31 @@ def calculate_enemy_attack_damage_dealt(num_of_dice: int = 1, dice_size: int = 4
     damage_dice = roll_dice(num_of_dice, dice_size)
     total_damage = calculate_damage_dealt(
         damage_dice, dmg_modifier) * modifer_based_on_success[enemy_result]
-
-    # print(
-    #     f"calculate_enemy_damage_dealt... ({damage_dice}+{dmg_modifier})*{modifer_based_on_success[enemy_result]}={total_damage}")
     return total_damage
 
 
 def calculate_enemy_saving_throw_damage(num_of_dice: int = 2, dice_size: int = 4, dmg_modifier:
                                         int = 5, atk_modifier: int = 18, dc=22, char_roll=21,
-                                        nat_one=False, nat_twenty=False):
+                                        nat_one=False, nat_twenty=False) -> int:
+    """
+    Calculate the amount of damage an enemy inflicted onto the character
+    for a special attack. Will determine if they hit by the players roll.
+    It will calculate the amount of damage they inflicted on the player based
+    on the degree of success of that roll
+
+    Args:
+        num_of_dice (int): number of dice rolled
+        dice_size (int): size of the dice rolled
+        dmg_modifier (int): additional damage modifier to roll
+        dc (int): difficulty check of their special attack
+        char_ac (int): player character ac (armor class)
+        char_roll (int): the total roll the player character made
+        nat_one (bool): did the player roll a nat 1
+        nat_twenty (bool): did the player roll a nat 20
+
+    Returns:
+        total_damage (int): the total amount of calculated damage they inflicted.
+    """
     modifer_based_on_success = {-1: 2, 0: 1, 1: 0.5, 2: 0}
 
     char_degree_of_success = degree_of_success(
@@ -227,14 +240,21 @@ def calculate_enemy_saving_throw_damage(num_of_dice: int = 2, dice_size: int = 4
     damage_dice = roll_dice(num_of_dice, dice_size)
     total_damage = round(calculate_damage_dealt(
         damage_dice, dmg_modifier) * modifer_based_on_success[char_degree_of_success])
-
-    # print(
-    #     f"calculate_enemy_saving_throw_damage... ({damage_dice}+{dmg_modifier})*"
-    #     f"{modifer_based_on_success[char_degree_of_success]}={total_damage}")
     return total_damage
 
 
-def enemy_text_result(damage=7, hit_text="Enemy hit", miss_text="Enemy miss"):
+def enemy_text_result(damage=7, hit_text="Enemy hit", miss_text="Enemy miss") -> str:
+    """
+    If the enemy hit, it will display their miss or hit text.
+
+    Args:
+        damage (int): the amount of damage they inflicted
+        hit_text (str): the miss text
+        success_text (str): the successfully hit text
+
+    Returns:
+        (str): the message on whether they hit or missed of their attack
+    """
     if damage == 0:
         return miss_text
     else:
@@ -313,7 +333,6 @@ def ability_roll_and_text_result(category: str, ability: str, dc: int, crit_succ
     print(f"\nYou must roll for action: {category}")
 
     # our actual rolls and result
-
     rolled = roll_ability_check(ability)
     result = degree_of_success(
         dc, rolled[1], rolled[2], rolled[3])
@@ -341,12 +360,19 @@ def ability_roll_and_text_result(category: str, ability: str, dc: int, crit_succ
 def enter_a_command() -> str:
     """
     Command to simply get the user input.
+
+    Return:
+        command (str): user inputted command
     """
     command = input("Please enter a command: ").strip().lower()
     return command
 
 
-def press_enter_to_continue():
+def press_enter_to_continue() -> str:
+    """
+    A simple function that prompts the user to press Enter.
+    Used to simulate a 'next' button.
+    """
     input("\033[38;5;241mPress Enter to continue...\033[0m")
 
 
@@ -408,13 +434,14 @@ def player_input_category(word: str, player) -> str:
 
 def player_input_inventory(word: str, player) -> str:
     """
-    Determine player input and if it is correlated with a specific category or keyword available.
+     Will make sure that player has inputted a proper inventory item.
 
     Arguments:
-        word (str): users inputted words
+        word (str): the direct input given by the player
+        player (class): the current player character
 
     Returns:
-        str: keyword category determined by user input, otherwise None is provided.
+        str: will give the verified item keyword
     """
     action = None
 
@@ -447,7 +474,15 @@ def player_input_inventory(word: str, player) -> str:
 
 
 def inventory_menu(player):
+    """
+    Will display a menu that allows the player character to use items
+    It will allow user to display their current inventory
+    Or allow the user to use an item from their inventory
+    Otherwise, it will allow the player to leave the menu
 
+    Args:
+        player (class): the current player character
+    """
     while True:
         print("\nInventory Menu:")
         print("1. View Inventory")
@@ -482,6 +517,15 @@ def inventory_menu(player):
 
 
 def use_item(item_name, player):
+    """
+    When the player wants to use an item from their inventory,
+    it will either display the item description or it will let the user
+    consume it as a potion.
+
+    Args:
+        item_name (str): name of the item
+        player (class): the current player character
+    """
     while True:
         item = items_compendium.inventory_list[item_name]
         if item.consumeable:
@@ -527,13 +571,17 @@ def player_input(command: str, player) -> str:
             command = input("Enter a valid command: ")
 
 
-# text printed like typing function
 # ANSI escape codes for text color
 BOLD = '\033[1m'
 RESET = '\033[0m'  # Reset color to default
 
 
 def print_text(message: str = "", text_speed="default"):
+    """
+    Will display the text through a text scroll. Has various levels
+    of speed that can be toggled. Speed setting determines how fast it takes
+    to print out '\ n' and individual characters.
+    """
     print("")
     line_speed_settings = {"default": 0.1, "slow": 0.9, "normal": 0.7,
                            "fast": 0.3, "extra fast": 0.1}
@@ -552,12 +600,22 @@ def print_text(message: str = "", text_speed="default"):
     print("")
 
 
-def style_damage(name="player", damage=10, current_hp=100):
+def style_damage(name="player", damage=10, current_hp=100) -> str:
+    """
+    Style restoring health. Will print in different shades of green
+    depending on the intensity of healing.
+
+    Args:
+        name (str): name of creature healing
+        heal (int): amount healed for
+
+    Returns:
+        message (str): stylized healing restoration
+    """
     RED = '\033[91m'
     FIREBRICK = '\033[38;5;196m'
     DARK_SALMON = '\033[38;5;210m'
     PALE_VIOLET_RED = '\033[38;5;211m'
-    RESET = '\033[0m'
     if damage >= 40:
         return (f"{FIREBRICK}{BOLD}{name} take's {damage} damage{RESET}"
                 f"\n{BOLD}{name} currently has {current_hp} HP{RESET}")
@@ -573,10 +631,20 @@ def style_damage(name="player", damage=10, current_hp=100):
 
 
 def style_heal(name="player", heal=10):
+    """
+    Style restoring health. Will print in different shades of green
+    depending on the intensity of healing.
+
+    Args:
+        name (str): name of creature healing
+        heal (int): amount healed for
+
+    Returns:
+        message (str): stylized healing restoration
+    """
     SEA_GREEN = '\033[38;5;28m'
     LIGHT_GREEN = '\033[38;5;83m'
     PALE_GREEN = '\033[38;5;114m'
-    RESET = '\033[0m'
     if heal >= 25:
         return (f"{SEA_GREEN}{BOLD}{name} heal's for {heal} HP{RESET}")
     elif heal >= 15:
@@ -587,19 +655,48 @@ def style_heal(name="player", heal=10):
         return ("")
 
 
-def style_mana(mana=2, current_mana=50):
+def style_mana(mana=2, current_mana=50) -> str:
+    """
+    Style player using mana
+
+    Args:
+        mana (int): amount of mana used
+        current_mana (int): current mana user now has
+
+    Returns:
+        message (str): stylized mana useage
+    """
     ROYAL_BLUE = '\033[38;5;69m'
     if current_mana == 0:
         return (f"{ROYAL_BLUE}{BOLD}Not enough mana to cast this spell.\nYou have {current_mana} MP left{RESET}")
     return (f"{ROYAL_BLUE}{BOLD}You used {mana} MP\nYou have {current_mana} MP left{RESET}")
 
 
-def style_restore_mana(restored=2, current_mana=50):
+def style_restore_mana(restored=2, current_mana=50) -> str:
+    """
+    Style restoring mana
+
+    Args:
+        restored (int): amount of mana restored
+        current_mana (int): current mana user now has
+
+    Returns:
+        message (str): stylized mana restoration
+    """
     ROYAL_BLUE = '\033[38;5;69m'
     return (f"{ROYAL_BLUE}{BOLD}You restore {restored} MP, you have {current_mana} left{RESET}")
 
 
-def style_error(message):
+def style_error(message) -> str:
+    """
+    Style error messages
+
+    Args:
+        message (str): inputted message
+
+    Returns:
+        message (str): stylized error message
+    """
     RED = '\033[38;5;88m'
 
     error_message = f"{RED}ERROR: {message}{RESET}"

@@ -1,12 +1,21 @@
 class Create_Item:
     def __init__(self, name, description, consumeable, potion_type, event):
+        """
+        Initialize basic information for an item creation.
+        """
         self.name = name
         self.description = description
         self.consumeable = consumeable
         self.potion_type = potion_type
         self.event = event
 
-    def get_description(self):
+    def get_description(self) -> str:
+        """
+        Get description for the item.
+
+        Returns:
+            descrption (str): returns description of the item
+        """
         return self.description
 
 

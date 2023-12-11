@@ -1,3 +1,7 @@
+"""
+Room that holds major secret event. If player fails, then they trigger instant death.
+"""
+
 import create_room
 import compendium_hazards
 

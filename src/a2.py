@@ -1,3 +1,6 @@
+"""
+Room that contains a Giant Rat for combat. Also contains a secret.
+"""
 import create_room
 import compendium_monster
 

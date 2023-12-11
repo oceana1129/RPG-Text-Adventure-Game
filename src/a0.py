@@ -1,6 +1,8 @@
+"""
+Entrance room of the game.
+"""
+
 import create_room
-import mechanics
-import keywords
 
 room = create_room.Room(
     name="entrance",

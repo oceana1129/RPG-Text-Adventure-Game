@@ -1,8 +1,14 @@
+"""
+    Create the character that the player will  use.
+"""
 import mechanics
 
 
 class Weapon:
     def __init__(self, name, typing, job, num_of_dice, damage_size, add_dmg, mana_cost=0, heals=False, cooldown_duration=False, cooldown_counter=False):
+        """
+        Initializes the attack or weapon used by the player character
+        """
         self.name = name
         self.typing = typing
         self.job = job
@@ -14,19 +20,55 @@ class Weapon:
         self.cooldown_duration = cooldown_duration
         self.cooldown_counter = cooldown_counter
 
-    def attempt(self):
+    def attempt(self) -> str:
+        """
+        Returns a message when player attempts to use this attack
+
+        Returns:
+            message (str): message when player uses this attack
+        """
         return f"You attempt to use {self.name}."
 
-    def you_hit(self):
+    def you_hit(self) -> str:
+        """
+        Returns a message when player hits
+
+        Returns:
+            message (str): message when player hits
+        """
         return "You hit."
 
-    def you_missed(self):
+    def you_missed(self) -> str:
+        """
+        Returns a message when player misses
+
+        Returns:
+            message (str): message when player misses
+        """
         return "You missed the"
 
-    def attack_roll(self):
+    def attack_roll(self) -> tuple:
+        """
+        Make an attack roll with the weapon.
+
+        Returns:
+            roll (tuple): A tuple with base roll[0], total roll[1], nat 1 bool[2], and nat 20 bool[3]
+        """
         return mechanics.roll_attack_or_spell()
 
     def damage_roll(self, degree_of_success=1, enemy="monster") -> int:
+        """
+        Will determine the amount of damage the character inflicted onto
+        the monster. Will display a success or fail message for hitting
+        the monster.
+
+        Args:
+            degree_of_success (int): the degree of success from the hit
+            enemy (str): the name of the monster
+
+        Returns:
+            damage (int): the amount of damage inflicted
+        """
         modifer_based_on_success = {-1: 0, 0: 0, 1: 1, 2: 2}
         roll = mechanics.roll_dice(self.num_of_dice, self.damage_size)
         damage = mechanics.calculate_damage_dealt(roll, self.add_dmg)
@@ -45,6 +87,13 @@ class Weapon:
         return damage
 
     def consume_mana(self, character):
+        """
+        Have the player character consume mana from their mana pool.
+        Will reduce their mana by mana_cost.
+
+        Args:
+            character (class): the current player character
+        """
         if self.mana_cost > 0:
             if character.mp >= self.mana_cost:
                 character.mp -= self.mana_cost
@@ -55,27 +104,48 @@ class Weapon:
                     self.mana_cost, character.mp))
 
     def apply_healing(self, character):
+        """
+        If the attack applies healing, then it will heal the character.
+
+        Args:
+            character (class): the current player character
+        """
         if self.heals:
             roll = mechanics.roll_dice(self.num_of_dice, self.damage_size)
             healing = mechanics.calculate_damage_dealt(roll, self.add_dmg)
             character.heal(healing)
 
     def start_cooldown(self):
-        # Set the cooldown counter to the maximum duration
+        """
+        Set the cooldown counter, for the attack, to the maximum duration
+        """
         self.cooldown_counter = self.cooldown_duration
         print(
             f"Cooldown Counter has started for {self.name} for {self.cooldown_duration} rounds")
-        # print(f"Confirming counter... {self.cooldown_counter}")
 
     def reduce_cooldown(self):
-        # Reduce the cooldown counter by 1 (called at the start of each combat round)
+        """
+        Reduce the cooldown counter by 1 (called at the start of each combat round).
+        Used for the specific attack.
+        """
         if self.cooldown_counter > 0:
             self.cooldown_counter -= 1
             print(
                 f"{self.name} cooldown reduced by 1... {self.cooldown_counter}")
 
-    def can_use(self, character):
-        # Check if the weapon can be used (cooldown counter is 0)
+    def can_use(self, character) -> bool:
+        """
+        Check if the weapon can be used, either:
+        cooldown counter is 0
+        or mana cost is over or equal to current mana player has
+
+        Args:
+            character (class): current player character
+
+        Returns:
+            (bool): whether the player can use the action or not
+        """
+        #
         if self.cooldown_duration > 0:
             return self.cooldown_counter == 0
         if self.mana_cost > 0:
@@ -83,7 +153,13 @@ class Weapon:
         if self.cooldown_duration == 0:
             return True
 
-    def hit_or_miss(self, damage=20):
+    def hit_or_miss(self, damage=20) -> bool:
+        """
+        Returns if the attack hit or missed.
+
+        Returns:
+            (bool): if attack hit or missed
+        """
         return damage != 0
 
 
@@ -95,6 +171,9 @@ class Character:
     will = 3
 
     def __init__(self, chosen_class):
+        """
+        Initialize the player character with basic information.
+        """
         self.character_name = "player"
         self.alignment = ""
         self.level = chosen_class.lvl
@@ -149,7 +228,16 @@ class Character:
         # calculations upon initializing
         self.calculate_max_health()
 
-    def get_ability_mod(self, ability) -> int:
+    def get_ability_mod(self, ability: str) -> int:
+        """
+        Get the appropirate ability modifier from the player character
+
+        Args:
+            ability (str): the name of the ability
+
+        Returns:
+            abilities (int): the modifier for the ability
+        """
         abilities = {"str": self.str + 10, "dex": self.dex + 10, "con": self.con + 10,
                      "intell": self.intell + 10, "int": self.intell + 10, "wis": self.wis + 10, "cha": self.cha + 10,
                      "perception": self.perception, "fortitude": self.fortitude,
@@ -168,18 +256,34 @@ class Character:
         self.max_health = (self.con + self.class_hitpoints) * self.level
         self.current_health = self.max_health
 
-    def get_fighting_actions(self):
+    def get_fighting_actions(self) -> list:
+        """
+        Get the list of actions the specific player character can use
+
+        Returns:
+            fighting_actions (list): the list of fighting actions
+        """
         fighting_actions = []
         for action_name in self.actions:
             fighting_actions.append(action_name)
         return fighting_actions
 
-    def character_death(self):
+    def character_death(self) -> str:
+        """
+        Display the character death text
+
+        Returns:
+            (str): character death text
+        """
         return f"\033[38;5;196m\033[1mEverything goes dark... And you die\033[0m"
 
-    def take_damage(self, damage):
+    def take_damage(self, damage: int):
         """
         Reduce characters current health by the damage amount inflicted.
+        Will display the damage taken and their current health to the user.
+
+        Args:
+            damage (int): the amount of damage they took
         """
         self.current_health -= damage
         if not self.is_alive():
@@ -188,9 +292,13 @@ class Character:
             mechanics.print_text(mechanics.style_damage(
                 self.character_name, damage, self.current_health))
 
-    def heal(self, healing):
+    def heal(self, healing: int):
         """
         Increases characters current health by the healing amount received.
+        Will also display the healing received to the user.
+
+        Args:
+            healing (int): the amount of healing a character recieved
         """
         self.current_health += healing
         if self.current_health > self.max_health:  # If healing exceeds current max, set to max
@@ -201,6 +309,9 @@ class Character:
     def restore_mana(self, healing):
         """
         Increases characters current health by the healing amount received.
+
+        Args:
+            healing (int): the amount of healing recieved
         """
         physical = ["str", "dex"]
         main_ability = self.class_main_ability
@@ -270,6 +381,14 @@ class Character:
                 mechanics.print_text(f"- {item}: {quantity}")
 
     def use_potion(self, potion_name):
+        """
+        Allows the user to use a potion from their inventory.
+        Depending on the type of potion will determine if the next
+        function called is for healing or mana.
+
+        Args:
+            potion_name (str): name of the potion consumed
+        """
         healing_type = {
             "healing potion lesser": [2, 8, 5],
             "healing potion moderate": [3, 8, 10],
@@ -336,6 +455,9 @@ class Character:
             mechanics.print_text("No conditions are active")
 
     def reset_conditions(self):
+        """
+        Reset all of the conditions the player has.
+        """
         self.blinded = False
         self.dazzled = False
         self.doomed = False
@@ -347,17 +469,18 @@ class Character:
         self.prone = False
 
     def start_round_of_combat(self):
-        # At the beginning of each round of combat, reduce cooldowns for all weapons
+        """
+        At the beginning of each round of combat, reduce cooldowns for all weapons
+        """
         for action in self.actions.values():
-            # print(
-            # f"Reset cooldown for {action.name} was {action.cooldown_counter}")
             if action.cooldown_duration > 0:
                 action.reduce_cooldown()
-                # print(
-                # f"Reset cooldown for {action.name} is now {action.cooldown_counter}")
 
     def apply_cleared_bonus(self, bonus="1 intell"):
-        # bonus format: "1 int"
+        """
+        If the room was cleared, and the user encountered a bonus
+        then add the appropriate bonus to their stats.
+        """
         bonus_parts = bonus.split()
         if len(bonus_parts) == 2:
             try:
@@ -376,11 +499,17 @@ class Character:
             pass
 
     def apply_bonus(self, bonus):
+        """
+        Apply a bonus to the characters attack roll
+        """
         if bonus > self.atk_roll_bonus:
             self.atk_roll_bonus = bonus
             print(f"Add +{bonus} to your attack rolls")
 
     def reset_attack_bonus(self):
+        """
+        Reset the characters attack bonus.
+        """
         self.atk_roll_bonus = 0
 
     def is_alive(self) -> bool:
@@ -392,8 +521,13 @@ class Character:
         """
         return self.current_health > 0
 
-    def attack_roll(self) -> int:
-        # have player make an attack roll... based on their class main ability
+    def attack_roll(self) -> tuple:
+        """
+        Have player make an attack roll... based on their class main ability
+
+        Returns:
+            roll (tuple): A tuple with base roll[0], total roll[1], nat 1 bool[2], and nat 20 bool[3].
+        """
         physical = ["str", "dex"]
         spell = ["cha", "intell", "wis"]
         main_ability = self.class_main_ability
@@ -408,11 +542,24 @@ class Character:
         return roll
 
     def did_it_hit(self, roll, enemy_ac):
+        """
+        Determine if the attack hit the enemy.
+
+        Args:
+            roll (tuple): the roll and degree of success of the roll
+            enemy_ac (int): the enemy armor class
+
+        Returns:
+            (int): integer representing degrees of success (-1=crit fail, 0= fail, 1=pass, 2=crit pass).
+        """
         return mechanics.degree_of_success(enemy_ac, roll[1], roll[2], roll[3])
 
 
 class Job:
     def __init__(self, name, lvl, abilities, saves, attacks, class_hp, class_mp, class_main_ability, actions):
+        """
+        Initialize the character class/job
+        """
         self.name = name
         self.lvl = lvl
         self.abilities = abilities
@@ -783,42 +930,3 @@ class Rogue(Job):
 
 
 player = Character(Bard())
-# print(player.inventory)
-# print(player.spellcaster)
-# print(player.class_name)
-# player.view_inventory()
-
-# # View the character's inventory
-# player.view_inventory()
-
-# # Remove items from the character's inventory
-# player.remove_item_from_inventory("healing potion lesser", quantity=2)
-# player.remove_item_from_inventory("gold", quantity=20)
-
-# # View the updated inventory
-# player.view_inventory()
-# player.use_potion("healing potion lesser")
-# player.use_potion("mana potion lesser")
-# player.use_potion("healing potion lesser")
-# player.view_inventory()
-
-# print(player.attack_roll())
-
-# player.take_damage(42)
-# player.actions["sooth"].consume_mana(player)
-# player.actions["sooth"].apply_healing(player)
-
-# player.attack_roll()
-# player.actions["painful vibrations"].damage_roll()
-# player.actions["painful vibrations"].consume_mana(player)
-# player.take_damage(10)
-# player.attack_roll()
-# player.actions["sound burst"].damage_roll()
-# player.actions["sound burst"].consume_mana(player)
-# player.attack_roll()
-# player.actions["haunting hymm"].damage_roll()
-# player.actions["haunting hymm"].consume_mana(player)
-# player.take_damage(25)
-# CHARACTER.actions["painful vibrations"].consume_mana(CHARACTER)
-
-# print(CHARACTER.actions["painful vibrations"].can_use(CHARACTER))

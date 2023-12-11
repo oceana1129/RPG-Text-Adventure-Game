@@ -1,3 +1,7 @@
+"""
+Room that leads to beauty of a god hazard. Can lead to main secret room.
+"""
+
 import create_room
 import compendium_hazards
 

@@ -1,6 +1,5 @@
 """
 This is the main program that will run the game.
-Loading Screen
 """
 
 import mechanics
@@ -19,7 +18,7 @@ import b1
 import b2
 import c2
 
-screen_width = 150
+screen_width = 200
 
 CHARACTER = character_creator.Character(character_creator.Bard())
 CURRENT_ROOM = a0.room
@@ -49,22 +48,43 @@ EVENTS = {"entrance": None,
           "c2": c2.event,
           }
 
-#### OPTIONS ####
 
+def option(message="") -> str:
+    """
+    Have the user type in an input. All messages are lowered and stripped.
 
-def option(message=""):
+    Args:
+        message (str): dislayed message or prompt for the user
+
+    Return:
+        input (str): the input the user typed in
+    """
     return input(f"{message} > ").lower().strip()
 
 
-def option_title_screen():
+def option_title_screen() -> str:
+    """
+    Have the user type in an input. All messages are lowered and stripped.
+
+    Return:
+        input (str): the input the user typed in
+    """
     return input(">>> ").lower().strip()
 
 
-def press_enter_to_continue():
+def press_enter_to_continue() -> str:
+    """
+    A simple function that prompts the user to press Enter.
+    Used to simulate a 'next' button.
+    """
     input("\033[38;5;241mPress Enter to continue...\033[0m")
 
 
 def end_demo():
+    """
+    A text that's displayed when the user reaches the end of the demo.
+    Will quit the game after it's done displaying.
+    """
     mechanics.print_text("You've reached the end of the demo!\n"
                          "I really hope you've enjoyed the game so far! \n"
                          "Please check out my GitHub for more future updates\n"
@@ -73,6 +93,10 @@ def end_demo():
 
 
 def game_over_screen():
+    """
+    Text that is displayed when the player character has died. 
+    Quits the game after it's done displaying.
+    """
     mechanics.print_text(keywords.text_game_over_death)
 
     mechanics.print_text("Thanks for playing!")
@@ -81,10 +105,20 @@ def game_over_screen():
 #### MOVING AROUND ####
 
 
-def transition_room(current_room: str, next_room: str, navigation_text: str):
-    # Have this call from the global CURRENT_ROOM variable
-    # Go from current_room to next_room if next_room is a room that
-    # you can transition to from current_room
+def transition_room(current_room: str, next_room: str, navigation_text: str) -> str:
+    """
+    Will determine which room the player has moved into. Will change the global
+    variables for CURRENT_ROOM and CURRENT_EVENT based on the new room inputted.
+    If next_room is not applicable, then return current_room
+
+    Args:
+        current_room (str): the name of the current room player is in
+        next_room (str): the name of the new prompted room
+        navigation_text (str): the description for moving into the next room
+
+    Return:
+        input (str): the input the user typed in
+    """
     global CURRENT_ROOM, CURRENT_EVENT, CHARACTER, ROOMS
     if next_room == "end":
         end_demo()
@@ -104,6 +138,12 @@ def transition_room(current_room: str, next_room: str, navigation_text: str):
 
 
 def hazard_activated():
+    """
+    Runs when a hazard is activated. Will read the hazard event description.
+    Will have the user make a saving throw, and take damage if they failed.
+    Depending on if they survived or failed, it will toggle the room state
+    and it will display that current room state.
+    """
     if CURRENT_EVENT.read_description() != "":
         print(CURRENT_EVENT.read_description())
 
@@ -121,7 +161,10 @@ def hazard_activated():
 
 def monster_attack():
     """
-    Goes through the monsters turn, different things occur depending on it's attack
+    Goes through the monsters turn, it will randomly select one of its moves.
+    If the monster rolls over the player ac, then they damage them...
+    or if the player fails their saving thow, then they damage them.
+    If the ability can heal the monster, then it will also heal them.
     """
     global CHARACTER, CURRENT_EVENT
     selected_move = CURRENT_EVENT.select_move()
@@ -148,6 +191,15 @@ def monster_attack():
 
 
 def player_attack():
+    """
+    Will prompt the user to select an action from their class list.
+    Once an action is picked, they will roll to see if they hit over
+    the monsters ac. If they do then they damage the monster. 
+    If the action costs mana, then it will reduce their mana.
+    If the action has a cooldown, then it will do the cooldown mechanic.
+    If the user enters an attack incorrectly, then will prompt the user
+    to enter a proper attack.
+    """
     while True:
 
         fighting_actions = CHARACTER.get_fighting_actions()
@@ -203,6 +255,14 @@ def player_attack():
 
 
 def start_combat():
+    """
+    Function will run when combat has been triggered. As long as the character
+    and monster are still alive, then it will play. If either monster or
+    character dies, it will bounce back and forth between player_attack() and
+    monster_attack(). If the monster dies, then it will display the fail text
+    of the monster. Otherwise, it will display the win text of the monster and
+    the player will go through a game over screen.
+    """
     global CHARACTER, CURRENT_EVENT
     mechanics.print_text(
         f"The {CURRENT_EVENT.name} is prepared to fight.")
@@ -240,6 +300,10 @@ def start_combat():
 
 
 def run_trigger_event():
+    """
+    Determines if the current room trigger event is a hazard or combat.
+    Will run the appropriate hazard_actuivated() or start_combat().
+    """
     # event was triggered, make sure it results in either combat or hazard as necessary
     global CURRENT_ROOM, CHARACTER, CURRENT_EVENT
     if CURRENT_EVENT.event_type() == "hazard":
@@ -285,6 +349,12 @@ def room_is_cleared(command):
 
 
 def room_not_cleared(command):
+    """
+    Actions available if the room is currently not cleared.
+
+    Args:
+        command (str): the command the user had previously entered
+    """
     global CURRENT_ROOM, CHARACTER, CURRENT_EVENT
 
     # ROOM NOT CLEARED ACTIONS
@@ -352,6 +422,9 @@ def room_not_cleared(command):
 
 
 def run_secret_event():
+    """
+    Runs if the player encounters a secret. Will gain loot from the room.
+    """
     global CURRENT_ROOM, CHARACTER, CURRENT_EVENT
     if CURRENT_ROOM.loot:
         press_enter_to_continue()
@@ -380,6 +453,12 @@ def run_secret_event():
 
 
 def room_is_failed(command):
+    """
+    Actions available if the room is currently failed.
+
+    Args:
+        command (str): the command the user had previously entered
+    """
     global CURRENT_ROOM, CHARACTER, CURRENT_EVENT
 
     # player can't explore further since they failed the room
@@ -396,6 +475,11 @@ def room_is_failed(command):
 
 
 def navigate_room():
+    """
+    Will look at the current state of the room. Depending on the current state
+    the function will either allow the player to use actions from room_is_cleared(),
+    room_not_cleared(), run_secret_event(), or room_is_failed().
+    """
     global CURRENT_ROOM, CHARACTER, CURRENT_EVENT  # Use the global variables
 
     # RESET CHARACTER CONDITIONS AND BONUSES
@@ -413,18 +497,15 @@ def navigate_room():
         elif command == "help":
             help_menu(asked_from_where="room")
         # ROOM CLEARED # ROOM CLEARED # ROOM CLEARED # ROOM CLEARED
-        # ROOM CLEARED # ROOM CLEARED # ROOM CLEARED # ROOM CLEARED
         # ROOM IS CLEARED --player can pick from cleared actions or navigation
         if CURRENT_ROOM.room_cleared:
             room_is_cleared(command)
         elif CURRENT_ROOM.room_secret:
             run_secret_event()
         # ROOM FAILED # ROOM FAILED # ROOM FAILED # ROOM FAILED
-        # ROOM FAILED # ROOM FAILED # ROOM FAILED # ROOM FAILED
         elif CURRENT_ROOM.room_failed:
             room_is_failed(command)
 
-        # ROOM UNCLEARED # ROOM UNCLEARED # ROOM UNCLEARED # ROOM UNCLEARED
         # ROOM UNCLEARED # ROOM UNCLEARED # ROOM UNCLEARED # ROOM UNCLEARED
         else:
             room_not_cleared(command)
@@ -434,6 +515,10 @@ def navigate_room():
 
 
 def start_game():
+    """
+    Function that displays when the user confirms to start the game.
+    Will bring them to navigate the first playable room.
+    """
     mechanics.print_text(
         f"Welcome, {CHARACTER.character_name}\nYou've started the game..")
     mechanics.print_text("Remember to explore and have fun!")
@@ -442,6 +527,15 @@ def start_game():
 
 
 def help_menu(asked_from_where):
+    """
+    Will help the user learn information about various parts of the game.
+    When user enters a response from the menu, it will display that information.
+    Runs until the user prompts to leave the help menu.
+    Will return user to the appropriate spot they left.
+
+    Args:
+        asked_from_where (str): where the help menu was asked from
+    """
     mechanics.print_text("✦ .          ⁺      . ✦ .     ⁺           . ✦\n"
                          "                   HELP MENU\n"
                          "✦ .          ⁺      . ✦ .     ⁺           . ✦\n")
@@ -497,6 +591,10 @@ def help_menu(asked_from_where):
 
 
 def about_game():
+    """
+    Will display information about the game, then return the user
+    to the title_screen_options()
+    """
     mechanics.print_text(keywords.text_about)
     press_enter_to_continue()
     mechanics.print_text(keywords.text_title_screen)
@@ -504,17 +602,29 @@ def about_game():
 
 
 def quit_game():
+    """
+    Will display the quit game text, and then stop the program.
+    """
     mechanics.print_text(keywords.text_quit)
     sys.exit()
 
 
 def title_screen():
+    """
+    Display the initial title screen and prompt the user to enter commands
+    from title_screen_options().
+    """
     os.system("clear")
     mechanics.print_text(keywords.text_title_screen)
     title_screen_options()
 
 
 def title_screen_options():
+    """
+    Options available when user first starts the game.
+    Depending on the input, it will run the appropriate function.
+    Otherwise, it will display an error message.
+    """
     while True:
         try:
             command = mechanics.player_input_category(
@@ -536,6 +646,11 @@ def title_screen_options():
 
 
 def setup_game():
+    """
+    Function to help set up the game. Will determine the name for the 
+    player character, and the class/job the character will have.
+    Will assign the appropriate class and name to the player CHARACTER.
+    """
     global CHARACTER
     mechanics.print_text(keywords.text_ask_name)
     name = option()
@@ -580,10 +695,3 @@ def setup_game():
 
 if __name__ == "__main__":
     title_screen()
-    # CHARACTER.add_item_to_inventory("healing potion lesser", quantity=3)
-    # CHARACTER.add_item_to_inventory("mana potion lesser", quantity=3)
-    # CHARACTER.add_item_to_inventory("gold", quantity=50)
-
-    # navigate_room()
-    # mechanics.player_input("move", CHARACTER)
-    # start_combat()

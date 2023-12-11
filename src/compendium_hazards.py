@@ -3,6 +3,9 @@ import mechanics
 
 class Hazard:
     def __init__(self, name, dc, saving_throw, description, skill_crit_success, skill_success, skill_fail, skill_crit_fail, damage_dice, damage_size, modifier):
+        """
+        Initialize the current hazard with basic information
+        """
         self.name = name
         self.dc = dc
         self.saving_throw = saving_throw
@@ -15,10 +18,16 @@ class Hazard:
         self.damage_size = damage_size
         self.modifier = modifier
 
-    def get_name(self):
+    def get_name(self) -> str:
+        """
+        Returns the name of the current hazard
+
+        Returns:
+            (str): the name of the hazard
+        """
         return self.name
 
-    def calculate_damage(self, player_saving_throw_mod: int = 20):
+    def calculate_damage(self, player_saving_throw_mod: int = 20) -> int:
         """
         Calculates the total damage a hazard dealt to the player
 
@@ -45,13 +54,31 @@ class Hazard:
             self.damage_dice, self.damage_size, self.modifier, player_results[0])
         return damage
 
-    def read_description(self):
+    def read_description(self) -> str:
+        """
+        Returns the description of the current hazard
+
+        Returns:
+            (str): the description of the hazard
+        """
         return self.description
 
-    def hazard_saving_throw(self):
+    def hazard_saving_throw(self) -> str:
+        """
+        Returns the saving throw of the current hazard
+
+        Returns:
+            (str): the saving throw of the hazard
+        """
         return self.saving_throw
 
-    def event_type(self):
+    def event_type(self) -> str:
+        """
+        Returns the type of event the hazard is
+
+        Returns:
+            (str): the type of event the hazard is
+        """
         return "hazard"
 
 

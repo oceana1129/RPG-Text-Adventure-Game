@@ -1,3 +1,6 @@
+"""
+Room that contains a tile room trap hazard.
+"""
 import create_room
 import compendium_hazards
 

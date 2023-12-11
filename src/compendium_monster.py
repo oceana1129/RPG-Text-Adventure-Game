@@ -1,14 +1,20 @@
+"""
+Create a base class for the monster
+Class into class for attacks (also include what % of the time a specific move should be used)
+Create defs for: take damage, heal, apply_condition, is alive
+Create defs to determine which atk the monster used -> then deal damage or apply condition
+Special attacks require a DC check, while normal attacks go against player AC
+"""
+
 import mechanics
 import random
-# create a base class for the monster
-# class into class for attacks (also include what % of the time a specific move should be used)
-# create defs for: take damage, heal, apply_condition, is alive
-# create defs to determine which atk the monster used -> then deal damage or apply condition
-# special attacks require a DC check, while normal attacks go against player AC
 
 
 class Monster():
     def __init__(self, name, ac, max_hp, current_hp, level, lore_dc, lore_mod, loot, defeat_text, win_text, attack_list):
+        """
+        Initialize basic information for a monster
+        """
         self.name = name
         self.ac = ac
         self.max_hp = max_hp
@@ -23,14 +29,18 @@ class Monster():
         ### SPECIFIC MONSTER ATTACKS ###
         self.attack_list = attack_list
 
-    def read_description(self):
-        return ""
-
     def take_damage(self, damage):
+        """
+        Will make the monster take damage. Will display text whether it is
+        near death or died.
+
+        Args:
+            damage (int): damage monster took
+        """
         self.current_hp -= damage
         mechanics.print_text(mechanics.style_damage(
             self.name, damage, self.current_hp))
-        if not self.is_alive():  # DELETE LATER
+        if not self.is_alive():
             mechanics.print_text(
                 f"\033[1m\033[38;5;241m{self.defeat_text}\n.\n.\033[0m")
         else:
@@ -39,6 +49,13 @@ class Monster():
                                      "One strike may be their last.")
 
     def heal(self, healing):
+        """
+        Will make the monster take healing. If healing is over their max_hp
+        then set to their max_hp
+
+        Args:
+            healing (int): the number healed by the monster
+        """
         self.current_hp += healing
         if self.current_hp > self.max_hp:
             self.current_hp = self.max_hp
@@ -53,13 +70,33 @@ class Monster():
         """
         return self.current_hp > 0
 
-    def event_type(self):
+    def event_type(self) -> str:
+        """
+        Returns the type of event the monster is.
+
+        Returns:
+            (str): returns the event type
+        """
         return "combat"
 
-    def get_name(self):
+    def get_name(self) -> str:
+        """
+        Gets the name of the monster.
+
+        Returns:
+            (str): the name of the monster
+        """
         return self.name
 
-    def select_move(self):
+    def select_move(self) -> str:
+        """
+        Determines the current moveset the monster has. It will randomly
+        select which move will be returned based on the frequency that the
+        attack should occur.
+
+        Returns:
+            (str): the selected move for the monster
+        """
         move_dict = {}
         for move_name, attack in self.attack_list.items():
             move_dict[move_name] = attack
@@ -99,7 +136,17 @@ class Attacks(Monster):
         self.self_heal_dice_size = self_heal_dice_size
         self.self_heal_mod = self_heal_mod
 
-    def standard_damage_roll(self, monster, char_ac=24):
+    def standard_damage_roll(self, monster, char_ac=24) -> int:
+        """
+        Based on a standard attack, determine the amount of damage inflicted.
+
+        Args:
+            monster (class): the base monster information
+            char_ac (int): the ac of the player character
+
+        Returns:
+            damage (int): the amount of damage inflicted
+        """
         roll = mechanics.calculate_enemy_attack_damage_dealt(
             self.num_of_dice, self.dice_size, self.add_dmg, self.atk_roll, char_ac)
         if self.hit_or_miss(roll):
@@ -111,7 +158,19 @@ class Attacks(Monster):
             mechanics.print_text(self.fail_text)
         return roll
 
-    def saving_throw_damage_roll(self, monster, char_roll=21, nat_one=False, nat_twenty=False):
+    def saving_throw_damage_roll(self, monster, char_roll=21, nat_one=False, nat_twenty=False) -> int:
+        """
+        Based on a special attack, determine the amount of damage inflicted.
+
+        Args:
+            monster (class): the base monster information
+            char_roll (int): the saving throw roll of the player character
+            nat_one (bool): was the player roll a nat 1
+            nat_twenty (bool): was the player roll a nat 20
+
+        Returns:
+            damage (int): the amount of damage inflicted
+        """
         roll = mechanics.calculate_enemy_saving_throw_damage(
             self.num_of_dice, self.dice_size, self.add_dmg, self.atk_roll,
             self.dc, char_roll, nat_one, nat_twenty)
@@ -124,16 +183,34 @@ class Attacks(Monster):
             mechanics.print_text(self.fail_text)
         return roll
 
-    def can_heal(self):
+    def can_heal(self) -> bool:
+        """
+        Returns if the attack can also heal
+
+        Return:
+            can_heal (bool): if the attack can heal or not
+        """
         return self.self_heal_dice_size > 0 or self.self_heal_mod > 0
 
     def apply_healing(self, monster):
+        """
+        determine the amount of health the monster healed up. Will prompt to heal them.
+
+        Args:
+            monster (class): the base monster information
+        """
         healing = mechanics.roll_dice(
             self.self_heal_num_dice, self.self_heal_dice_size)
         healing = mechanics.calculate_damage_dealt(healing)
         monster.heal(healing)
 
     def deal_condition(self):
+        """
+        Determines if the attack inflicts a condition onto the player.
+
+        Returns:
+            conditions (dict): a list of conditions it inflicted
+        """
         conditions = {"blinded": False, "dazzled": False, "doomed": False, "drained": False,
                       "fatigued": False, "fascinated": False, "flat_footed": False, "frightened": False, "prone": False}
         if self.apply_condition_first[0] in conditions:
@@ -143,7 +220,16 @@ class Attacks(Monster):
 
         return conditions
 
-    def hit_or_miss(self, damage=20):
+    def hit_or_miss(self, damage=20) -> bool:
+        """
+        Determines if the attack hit or missed
+
+        Args:
+            damage (int): damage that the monster inflicted
+
+        Returns:
+            (bool): if the attack hit or missed
+        """
         return damage != 0
 
 
@@ -614,17 +700,4 @@ compendium_monster = [
         ],
         "loot": ["Hundred Moth Caress Scythe", "Necromancer Cloak", "Voidsworn Amulet (drain health from enemies and heal you)", "Book of Shadows", "Haunted Mirror (inspect to see necromancer's secrets)", "Crypt Key"]
     }
-
 ]
-
-# monster_shadow.attack_list["shadow claws"].apply_healing(monster_shadow)
-# monster_shadow.take_damage(20)
-# monster_shadow.take_damage(13)
-# monster_shadow.take_damage(10)
-# monster_shadow.attack_list["shadow claws"].standard_damage_roll(monster_shadow)
-# monster_shadow.attack_list["shadow claws"].saving_throw_damage_roll(
-#     monster_shadow)
-# selected_move = monster_shadow.select_move()
-# print(monster_shadow.attack_list[selected_move[0]].name)
-# print(selected_move[1].dc)
-# selected_move[1].standard_damage_roll(monster_shadow)

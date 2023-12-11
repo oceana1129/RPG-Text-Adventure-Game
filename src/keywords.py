@@ -1,3 +1,7 @@
+"""
+Keywords or messages used throughout the game
+"""
+
 action_keywords = {
     # menu stuff
     "play": ["start", "play", "play game", "start game", "boot", "boot game", "p1"],

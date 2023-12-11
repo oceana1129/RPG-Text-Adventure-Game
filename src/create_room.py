@@ -24,18 +24,39 @@ class Room:
         self.actions_not_cleared_navigation = actions_not_cleared_navigation
 
     def player_clear_room(self):
+        """
+        Set the room value room_cleared to True
+        """
         self.room_cleared = True
 
     def player_fail_room(self):
+        """
+        Set the room value room_failed to True
+        """
         self.room_failed = True
 
     def player_find_secret(self):
+        """
+        Set the room value room_secret to True
+        """
         self.room_secret = True
 
     def player_trigger_event(self):
+        """
+        Set the room value trigger_event to True
+        """
         self.trigger_event = True
 
     def apply_room_state(self, success_effect, fail_effect, result):
+        """
+        Dynamically apply the proper room state to the room based on the 
+        players results and actions.
+
+        Args:
+            success_effect (str): the actions success state for the room
+            fail_effect (str): the actions fail state for the room
+            result (int): degree of success
+        """
         if result >= 1:
             if success_effect == "room cleared":
                 self.player_clear_room()
@@ -52,12 +73,18 @@ class Room:
                 mechanics.print_text(self.get_description())
 
     def get_room_state(self):
+        """
+        Print out the current room state. Used for debugging.
+        """
         print("Room Cleared:", self.room_cleared)
         print("Room Failed: ", self.room_failed)
         print("Room Secret: ", self.room_secret)
         print("Triggered Event: ", self.trigger_event)
 
     def get_available_actions(self):
+        """
+        Current list of available actions of the room
+        """
         actions = {}
         if self.room_cleared:
             actions.update(self.actions_cleared_navigation)
@@ -66,6 +93,13 @@ class Room:
         print(actions)
 
     def get_description(self):
+        """
+        Get the description of the room that changes based onthe current
+        rooms state.
+
+        Returns:
+            (str): description of the room
+        """
         if self.room_cleared == False and self.room_failed == False:
             return self.description
         elif self.room_cleared:
@@ -73,8 +107,14 @@ class Room:
         else:
             return self.description_failed
 
-    def get_current_room_directions(self):
-        # loop through the current rooms you can travel to
+    def get_current_room_directions(self) -> list:
+        """
+        loop through the current directions you can travel to 
+        and return it to the user
+
+        Returns:
+            current_directions (list): list of rooms you can move to
+        """
         current_directions = []
         if self.room_cleared:
             for action in self.actions_cleared_navigation:
@@ -84,10 +124,16 @@ class Room:
                 current_directions.append(action)
         return current_directions
 
-    def get_loot(self):
+    def get_loot(self) -> dict:
+        """
+        Return the loot the room has available
+        """
         return self.loot
 
-    def get_trigger_name(self):
+    def get_trigger_name(self) -> str:
+        """
+        Returns the name of the trigger of the room
+        """
         return self.trigger_name
 
 
@@ -106,6 +152,10 @@ class Action_Cleared(Room):
     def was_used(self) -> str:
         """
         If the user has already selected this action, ask player to do a new action.
+
+
+        Returns:
+            (str): message to tell the user they've used this action
         """
         if self.used:
             return ("You've already used this action, try a new one or continue navigating.")
@@ -115,12 +165,18 @@ class Action_Cleared(Room):
     def get_bonus(self) -> str:
         """
         Get the name of the bonus the action would provide
+
+        Returns:
+            (str): name of the bonus the action provides
         """
         return self.bonus
 
     def get_success_text(self) -> str:
         """
-        Get the text this action should display
+        Will return success text for the specified action type.
+
+        Returns:
+            (str): success text for the action
         """
         return self.text
 
@@ -147,18 +203,28 @@ class Action_Not_Cleared(Room):
     def get_success_text(self) -> str:
         """
         Will return success text for the specified action type.
+
+        Returns:
+            (str): success text for the action
         """
         return self.success_text
 
     def get_fail_text(self) -> str:
         """
         Will return fail text for the specified action type.
+
+        Returns:
+            (str): fail text for the action
         """
         return self.fail_text
 
     def was_used(self) -> str:
         """
         If the user has already selected this action, ask player to do a new action.
+
+
+        Returns:
+            (str): message to tell the user they've used this action
         """
         if self.used:
             return ("You've already used this action, try a new one or continue navigating.")
@@ -168,33 +234,56 @@ class Action_Not_Cleared(Room):
     def get_bonus(self) -> str:
         """
         Get the name of the bonus the action would provide
+
+        Returns:
+            (str): name of the bonus the action provides
         """
         return self.bonus
 
-    def get_dc_and_text(self):
+    def get_dc_and_text(self) -> tuple:
+        """
+        Returns the dc of the particular action, along with the
+        success and fail text of this action.
+
+        Returns:
+            (tuple): DC, success_text, and fail_text
+        """
         return (self.DC, self.success_text, self.fail_text)
 
 
 class Action_Cleared_Navigation(Room):
     def __init__(self, navigation_text, next_room):
+        """
+        Initialize the navigational actions available to a room that has been cleaed
+        """
         self.navigation_text = navigation_text
         self.next_room = next_room
 
     def get_next_room(self) -> str:
         """
         Get the name of the next room player is navigating to
+
+        Returns:
+            (str): name of the next room
         """
         return self.next_room
 
     def get_navigation_text(self) -> str:
         """
         Get the navigational text for moving in a certain direction
+
+        Returns:
+            (str): navigational text of the action
         """
         return self.navigation_text
 
 
 class Action_Not_Cleared_Navigation(Room):
     def __init__(self, navigation_text, next_room, trigger_event):
+        """
+        Initialize actions for navigation available in a room that has 
+        not been cleared yet
+        """
         self.navigation_text = navigation_text
         self.next_room = next_room
         self.trigger_event = trigger_event
@@ -202,12 +291,18 @@ class Action_Not_Cleared_Navigation(Room):
     def get_next_room(self) -> str:
         """
         Get the name of the triggered effect moving will cause
+
+        Returns:
+            (str): name of the trigger event
         """
         return self.trigger_event
 
     def get_navigation_text(self) -> str:
         """
         Get the navigational text for moving in a certain direction
+
+        Returns:
+            (str): navigational text of the action
         """
         return self.navigation_text
 
@@ -273,11 +368,3 @@ test_room_1 = Room(
         )
     }
 )
-
-
-# print(test_room_1.actions_not_cleared["perception"].get_success_text())
-# test_room_1.actions_not_cleared["perception"].use_action()
-# print(test_room_1.actions_not_cleared["perception"].used)  # should print true
-# test_room_1.player_clear_room()
-# test_room_1.get_loot()
-# print(test_room_1.get_room_state())

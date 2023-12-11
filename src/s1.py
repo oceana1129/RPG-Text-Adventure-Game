@@ -1,6 +1,7 @@
+"""
+Room that is just exploration. Can unlock a hidden secret room.
+"""
 import create_room
-import mechanics
-import keywords
 
 room = create_room.Room(
     name="s1",

@@ -1,3 +1,7 @@
+"""
+Room that contains a Dragon for combat. The final demo room.
+"""
+
 import create_room
 import compendium_monster
 

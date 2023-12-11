@@ -1,3 +1,7 @@
+"""
+Room that contains a miasma hazard.
+"""
+
 import create_room
 import compendium_hazards
 

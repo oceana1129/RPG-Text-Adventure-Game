@@ -1,3 +1,7 @@
+"""
+Room that contains a Shadow for combat.
+"""
+
 import create_room
 import compendium_monster
 
