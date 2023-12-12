@@ -24,9 +24,9 @@ room = create_room.Room(
     trigger_event=False,
     trigger_name="hazard_miasma",
     description_cleared="You can see up ahead that there is a corridor that leads either "
-    "north or east.",
+    "north or west.",
     description_failed="The miasma in the room makes you naseous, but at least it's cleared "
-    "up significantly more. You can see a corridor that leads either north or east.",
+    "up significantly more. You can see a corridor that leads either north or west.",
     loot={},
     action_cleared={
         "perception": create_room.Action_Cleared(
@@ -40,8 +40,8 @@ room = create_room.Room(
             navigation_text="Continue through the tunnel and move north.",
             next_room="b2"
         ),
-        "east": create_room.Action_Cleared_Navigation(
-            navigation_text="Continue through the tunnel and move east.",
+        "west": create_room.Action_Cleared_Navigation(
+            navigation_text="Continue through the tunnel and move west.",
             next_room="a2"
         ),
     },
@@ -154,7 +154,7 @@ room = create_room.Room(
             next_room="",
             trigger_event="trigger event"
         ),
-        "east": create_room.Action_Not_Cleared_Navigation(
+        "west": create_room.Action_Not_Cleared_Navigation(
             navigation_text="You walk through the room.",
             next_room="",
             trigger_event=""

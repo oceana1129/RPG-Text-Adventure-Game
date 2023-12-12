@@ -392,8 +392,8 @@ def player_input_category(word: str, player) -> str:
     is_spellcaster = False
     if player.class_name.lower() == "bard":
         is_bard = True
-    if player.spellcaster > 0:
-        is_spellcaster = True
+    # if player.class_name.lower() == "bard" or player.class_name.lower() == "wizard":
+    #     is_spellcaster = True
 
     # Iterate through each action category and its associated keywords
     for category, keywords in actions.items():
@@ -418,16 +418,13 @@ def player_input_category(word: str, player) -> str:
     if action == "perform" and not is_bard:
         action = None
         print(f"{action} is not available to your class")
-    elif action == "detect magic" or action == "cast spell" and not is_spellcaster:
-        action = None
-        print(f"{action} is not available to your class")
+    # elif action == "detect magic" or action == "cast spell" and not is_spellcaster:
+    #     action = None
+        # print(f"{action} is not available to your class")
     elif action is not None:
         print(f"Corresponding Input: {action}")
     else:
         print("No matching action found.")
-
-    # if player is not a bard then they can't use perform
-    # if player spellcasting ==0 then they cant use cast spell or detect magic
 
     return action  # Return the matched action or None if there's no match
 

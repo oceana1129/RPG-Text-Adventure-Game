@@ -61,7 +61,8 @@ action_keywords = {
     # magic stuff
     "cast spell": ["cast spell", "cast a spell", "use magic", "invoke spell", "invoke a spell",
                    "enchant", "use cantrip", "ritual", "spell"],
-    "detect magic": ["detect magic", "sense magic", "spot magical auras", "identify magic"],
+    "detect magic": ["detect magic", "sense magic", "spot magical auras", "identify magic",
+                     "see magic"],
 
     # dex actions
     "throw": ["throw", "toss", "hurl", "pitch", "launch", "fling"],

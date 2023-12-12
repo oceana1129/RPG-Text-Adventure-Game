@@ -474,7 +474,7 @@ class Character:
         """
         for action in self.actions.values():
             if action.cooldown_duration > 0:
-                action.reduce_cooldown()
+                action.cooldown_counter = 0
 
     def apply_cleared_bonus(self, bonus="1 intell"):
         """
@@ -638,7 +638,7 @@ class Fighter(Job):
                     cooldown_duration=2,
                     cooldown_counter=False
                 ),
-                "Dazing Blow": Weapon(
+                "dazing blow": Weapon(
                     name="Dazing Blow",
                     typing="melee",
                     job="fighter",
