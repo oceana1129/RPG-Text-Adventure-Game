@@ -73,6 +73,10 @@ If you encounter a creature and things do not end peacefully, then an encounter 
 
 Once a room is cleared, you may explore and navigate to other rooms. This is done through simple north, south, east, and west commands to navigate. Note, that if a room was not cleared or failed, certain rooms or options may not be available to you.
 
+### Example Runs
+
+[Here is a YouTube link displaying some runs of the code](https://youtu.be/Fx_okUmQX44)
+
 ### Thank You For Playing!
 
 Thank you, the player, for playing my game. This game is currently available as a Demo with 10 different rooms to explore.
