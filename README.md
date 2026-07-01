@@ -4,11 +4,18 @@
 WELCOME TO THE TEXT RPG GAME
 ✦ . ⁺ . ✦ . ⁺ . ✦
 
-## General Information
 
-### Introduction
+## Introduction
 
-Hello, and welcome to the Text Adventure RPG! This is a role-playing game, based on the Pathfinder 2e rule system, where you assume the role of an adventurer uncovering the secrets of a dungeon.
+Hello, and welcome to the Text Adventure RPG! This is a role-playing game based on the Pathfinder 2e rule system, where you assume the role of an adventurer uncovering the secrets of a dungeon.
+
+This is a terminal-based RPG inspired by the Pathfinder 2e tabletop system. Players explore a dungeon, solve puzzles, battle enemies, and make choices through text-based commands, with gameplay driven by dice rolls, character classes, and dynamic encounters.
+
+## How It's Made:
+
+**Tech used:** Python
+
+This project was built from the ground up in Python as an input-driven adventure game inspired by tabletop role-playing mechanics. Players create a character by choosing from multiple classes, each with unique abilities, combat styles, and statistics. The game features an exploration system where player actions, puzzles, hazards, and encounters are resolved through Pathfinder 2e-inspired dice mechanics, including critical successes and failures. Combat includes health, mana, cooldowns, inventory management, and varied enemy behaviors, while a room-based navigation system allows players to progress through the dungeon based on their choices and outcomes.
 
 ### Key Features
 
@@ -77,8 +84,17 @@ Once a room is cleared, you may explore and navigate to other rooms. This is don
 
 [Here is a YouTube link displaying some runs of the code](https://youtu.be/Fx_okUmQX44)
 
+## Optimizations
+
+Given more time, I would have expanded the game with persistent data using JSON to simplify content management and improve scalability. I also planned to add status effects, inventory usage during combat, additional quality-of-life features such as character stat screens and customizable text speed, and a more polished inventory system. While the current demo includes 10 explorable rooms, the game's architecture was designed to support a much larger dungeon, making future content additions straightforward.
+
+## Lessons Learned:
+
+This project was my introduction to Python and reinforced many core software engineering concepts beyond the language itself. I gained experience designing modular game systems, implementing object-oriented programming principles, creating maintainable code, and balancing project scope with available time. Building a complete RPG also taught me how interconnected systems like combat, exploration, inventory, and progression work together to create an engaging gameplay experience.
+
+
 ### Thank You For Playing!
 
 Thank you, the player, for playing my game. This game is currently available as a Demo with 10 different rooms to explore.
 
-If you’d like to see more or enjoy my game, stay tuned to my GitHub page. If you have anything to share, have feedback to give, or find any potential errors then please let me know. Any feedback is appreciated.
+If you’d like to see more or enjoy my game, stay tuned to my GitHub page. If you have anything to share, have feedback to give, or find any potential errors, then please let me know. Any feedback is appreciated.
